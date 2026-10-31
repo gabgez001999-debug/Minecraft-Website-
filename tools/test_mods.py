@@ -228,7 +228,37 @@ def test_create_menu_addons():
     check(M.widgetCount() <= 8, "Abhängigkeiten passen auf den Bildschirm")
     M.closeScreen()
 
-    # Rechtsklick mit Item in der Hand setzt das Teil
+    # B schließt das Menü wieder
+    M.binds["menu"].onPress()
+    M.ticks(3)
+    check(M.current is not None and not M.current.closed, "B öffnet das Menü")
+    M.binds["menu"].onPress()
+    check(M.current is None or M.current.closed, "B nochmal schließt das Menü")
+    M.binds["menu"].onPress()
+    M.ticks(3)
+    M.screenKey("b")
+    M.binds["menu"].onPress()   # gleicher Tastendruck kommt auch beim Keybind an
+    check(M.current is None or M.current.closed, "B im Menü (onKey) schließt, ohne sofort wieder aufzugehen")
+    M.ticks(1)
+    M.binds["menu"].onPress()
+    M.ticks(3)
+    M.screenKey(66)
+    check(M.current is None or M.current.closed, "B als Tastencode 66 schließt ebenfalls")
+
+    # Rechtsklick per Maustasten-Abfrage (ohne mouse_click-Event)
+    lua.execute('M.held = "minecraft:nautilus_shell"')
+    hit(lua, 4, 72, 4, "east")
+    lua.execute('M.mouseDown.right = true')
+    M.ticks(2)
+    lua.execute('M.mouseDown.right = false')
+    M.ticks(1)
+    cmds = sent(lua)
+    check(any(c.startswith("setblock 5 72 4 minecraft:barrier keep") for c in cmds), "Rechte Maustaste gedrückt halten setzt das Zahnrad (Abfrage)")
+    check(sum(1 for c in cmds if c.startswith("setblock 5 72 4")) == 1 and not any(c.startswith("setblock 6 72 4") for c in cmds),
+          "ein Klick setzt genau ein Teil")
+    M.ticks(6)
+
+    # Rechtsklick mit Item in der Hand setzt das Teil (Event)
     lua.execute('M.held = { id = "minecraft:breeze_rod", name = "Welle", count = 64 }')
     hit(lua, 4, 70, 4, "east")
     e = M.rightClick()

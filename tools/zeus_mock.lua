@@ -102,7 +102,12 @@ local function makeScreen(spec)
   function s:button(o) table.insert(self.items, { kind = "button", text = o.text, onClick = o.onClick }) end
   function s:textField(o) table.insert(self.items, { kind = "textField", spec = o }); return o end
   function s:rebuild() self.items = {}; spec.init(self) end
-  function s:close() self.closed = true; if M.current == self then M.current = nil end end
+  function s:close()
+    if self.closed then return end
+    self.closed = true
+    if M.current == self then M.current = nil end
+    if spec.onClose then spec.onClose() end
+  end
   return s
 end
 ui = {

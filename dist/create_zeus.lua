@@ -1,6 +1,6 @@
 -- name: Create (Eaglercraft-Port)
 -- id: create_zeus
--- version: 0.2.1
+-- version: 0.2.2
 -- author: Larpbase
 -- description: Inoffizieller Create-Port für Eaglercraft 26.3 (Zeus-Lua). Wellen, Zahnräder, Motoren, Bohrer, Lüfter, Presse, Mahlstein, Förderband und Stress-System.
 --
@@ -11,7 +11,7 @@
 --   * Das Kinetik-Netz (Drehzahl, Drehrichtung, Übersetzung, Stress) rechnet diese Mod in Lua,
 --     angelehnt an Create (Code MIT, (c) simibubi & Create-Team). Es werden keine Create-Assets genutzt.
 
-local MOD_VERSION = "0.2.1"
+local MOD_VERSION = "0.2.2"
 
 ---------------------------------------------------------------------------
 -- Kompatibilität: Zeus-Bibliotheken defensiv ansprechen
@@ -1661,8 +1661,17 @@ end
 
 -- Tastatur im Menü: 1–4 = Tab, ←/→ = Seite
 local function menuKey(key)
-  local k = tostring(type(key) == "table" and (field(key, "key") or field(key, "name")) or key):lower()
+  local raw = (type(key) == "table" or type(key) == "userdata") and (field(key, "key") or field(key, "name") or field(key, "code")) or key
+  local k = tostring(raw):lower()
   local n = tonumber(k)
+  -- GLFW-Tastencodes: 1-4 = 49-52, B = 66, rechts = 262, links = 263
+  if n == 66 or k == "b" or k == "key.keyboard.b" then
+    Menu.closedAt = tickNo
+    Menu.close()
+    return true
+  end
+  if n and n >= 49 and n <= 52 then n = n - 48 end
+  if n == 262 then k = "right" elseif n == 263 then k = "left" end
   if n and n >= 1 and n <= #TABS then setTab(n); Menu.refresh(true) return true end
   if k == "right" or k == "arrowright" or k == "pagedown" then
     Menu.page = Menu.page % Menu.pages + 1; Menu.refresh(true) return true
@@ -1734,7 +1743,16 @@ end
 
 if keys then
   local function bind(spec) pcall(keys.bind, spec) end
-  bind({ id = "menu", label = "Create: Menü", default = "b", onPress = function() if active then openMenu() end end })
+  bind({ id = "menu", label = "Create: Menü (B = auf/zu)", default = "b", inScreens = true, onPress = function()
+    if not active then return end
+    if Menu.closedAt == tickNo then return end
+    local okS, scr = call(game, "screen")
+    local screenOpen = okS and scr ~= nil and scr ~= false
+    if Menu.scr and screenOpen then Menu.close() return end
+    if screenOpen then return end   -- Chat, Inventar usw.: nicht dazwischenfunken
+    Menu.scr = nil
+    openMenu()
+  end })
   bind({ id = "place", label = "Create: Bauteil setzen", default = "r", onPress = function() if active then placeSelected() end end })
   bind({ id = "wrench", label = "Create: Schraubenschlüssel", default = "v", onPress = function() if active then wrench() end end })
   bind({ id = "remove", label = "Create: Bauteil abbauen", default = "x", onPress = function()
@@ -1857,6 +1875,16 @@ local function dumpApi()
       logMsg(libname .. ": " .. table.concat(fs, ", "))
     end
   end
+  local okH, held = call(player, "heldItem")
+  if okH then
+    if type(held) == "table" then
+      local parts = {}
+      for k, v in pairs(held) do parts[#parts + 1] = tostring(k) .. "=" .. tostring(v) end
+      logMsg("heldItem: {" .. table.concat(parts, ", ") .. "}")
+    else
+      logMsg("heldItem: " .. tostring(held))
+    end
+  end
   local okL, hit = call(player, "lookingAt")
   if okL then
     if type(hit) == "table" then
@@ -1934,6 +1962,8 @@ end
 ---------------------------------------------------------------------------
 -- Events
 ---------------------------------------------------------------------------
+local pollRightClick   -- weiter unten definiert, im Tick benutzt
+
 local function onJoin()
   worldKey = worldName()
   loadAddons()
@@ -1966,6 +1996,7 @@ on("tick", function()
   tickNo = tickNo + 1
   stepInstall()
   Menu.tick()
+  pollRightClick()
   updateCrank()
   updateEnergy()
   if tickNo % 10 == 1 then updateNear() end
@@ -1984,34 +2015,61 @@ on("tick", function()
 end)
 
 local lastUse = -100
-on("mouse_click", function(e)
-  if not active then return end
+local heldLogged = false
+
+-- Rechtsklick mit einem Create-Teil (oder dem Schraubenschlüssel) in der Hand
+local function useHeld()
+  if not active then return false end
   local okS, scr = call(game, "screen")
-  if okS and scr then return end
-  local action = field(e, "action") or field(e, "state")
-  if action == "release" or action == "up" or field(e, "pressed") == false then return end
-  local b = field(e, "button")
-  local right
-  if b ~= nil then right = (b == "right" or b == 1 or b == "1" or b == "secondary")
-  else
-    local ok, d = call(lib("mouse"), "isDown", "right")
-    right = ok and d == true
-  end
-  if not right then return end
+  if okS and scr then return false end
   local part = heldPart()
-  if not part then return end
-  pcall(function() e:cancel() end)
-  if tickNo - lastUse < 4 then return end
+  if not part then
+    if not heldLogged then
+      heldLogged = true
+      local okH, h = call(player, "heldItem")
+      local desc = tostring(h)
+      if okH and (type(h) == "table") then
+        local parts = {}
+        for k, v in pairs(h) do parts[#parts + 1] = tostring(k) .. "=" .. tostring(v) end
+        desc = "{" .. table.concat(parts, ", ") .. "}"
+      end
+      logMsg("Rechtsklick: Item in der Hand nicht erkannt: " .. desc)
+    end
+    return false
+  end
+  if tickNo - lastUse < 4 then return true end
   lastUse = tickNo
   if part == "wrench" then
     local c = targetComponent()
-    if not c then return end
+    if not c then return true end
     local okSn, sneaking = call(player, "isSneaking")
     if okSn and sneaking then pickUp(c) else wrench() end
   else
     selected = part
     placeSelected()
   end
+  return true
+end
+
+-- Abfrage der rechten Maustaste in jedem Tick (funktioniert unabhängig vom Event-Format)
+local rightWasDown = false
+pollRightClick = function()
+  local ok, d = call(lib("mouse"), "isDown", "right")
+  local down = ok and d == true
+  if down and not rightWasDown then useHeld() end
+  rightWasDown = down
+end
+
+on("mouse_click", function(e)
+  local action = field(e, "action") or field(e, "state")
+  if action == "release" or action == "up" or field(e, "pressed") == false then return end
+  local b = field(e, "button")
+  local right = b == "right" or b == 1 or b == "1" or b == "secondary"
+  if b == nil then
+    local ok, d = call(lib("mouse"), "isDown", "right")
+    right = ok and d == true
+  end
+  if right and useHeld() then pcall(function() e:cancel() end) end
 end)
 
 on("chat_receive", function(e)
