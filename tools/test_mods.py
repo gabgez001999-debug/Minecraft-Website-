@@ -33,6 +33,15 @@ def runtime(mod, store=None):
     return lua
 
 
+def tick_until(lua, cond, limit=6000):
+    M = lua.globals().M
+    for i in range(limit):
+        if cond():
+            return i
+        M.ticks(1)
+    return None
+
+
 def lua_list(t):
     return [t[i] for i in range(1, len(t) + 1)]
 
@@ -201,10 +210,22 @@ def test_create_menu_addons():
     M.ticks(10)
     check("Elektrik ✖" in M.screenText(), "Detailansicht zeigt fehlende Abhängigkeit")
     check(M.widgetCount() <= 8, "Detailansicht passt auf den Bildschirm")
+    lua.execute("math.randomseed(7)")
     M.click("Installieren")
     M.ticks(10)
-    check("%" in M.screenText() and "█" in M.screenText(), "Fortschrittsbalken im Menü")
-    M.ticks(150)
+    check("%" in M.screenText() and "░" in M.screenText(), "Fortschrittsbalken im Menü")
+    M.ticks(60)
+    check(" 0%" in M.screenText() and "Verbinde mit Server" in M.screenText(), "die ersten 4 Sekunden bleibt es bei 0 % (Verbinde …)")
+    stages = set()
+    def watch():
+        t = M.screenText()
+        for st in ("Lade herunter", "Warte auf Antwort", "Entpacke", "Prüfe Abhängigkeiten", "Aktiviere"):
+            if st in t:
+                stages.add(st)
+        return any("Create: Aeronautik installiert" == x for x in lua_list(M.toasts))
+    n = tick_until(lua, watch)
+    check(n is not None and n > 100, f"Installation dauert realistisch ({n} Ticks)")
+    check({"Lade herunter", "Entpacke", "Aktiviere"} <= stages, "Phasen: Herunterladen, Entpacken, Aktivieren " + str(sorted(stages)))
     toasts = lua_list(M.toasts)
     check(any("Create: Elektrik installiert" == t for t in toasts) and any("Create: Aeronautik installiert" == t for t in toasts),
           "beide Addons installiert, Meldung oben rechts (Toast)")
@@ -223,9 +244,15 @@ def test_create_menu_addons():
           "Aktivieren schaltet die Abhängigkeit wieder an")
     M.screenKey("3")
     M.ticks(12)
-    txt = M.screenText()
+    txt, fits = "", True
+    for _ in range(4):
+        txt += M.screenText() + "\n"
+        fits = fits and M.widgetCount() <= 8
+        if "Seite" in M.screenText():
+            M.click("Seite")
+        M.ticks(12)
     check("Create: Aeronautik:" in txt and "braucht Create: Elektrik ✔" in txt, "Abhängigkeiten-Tab")
-    check(M.widgetCount() <= 8, "Abhängigkeiten passen auf den Bildschirm")
+    check(fits, "Abhängigkeiten passen auf den Bildschirm (jede Seite)")
     M.closeScreen()
 
     # B schließt das Menü wieder
@@ -306,7 +333,8 @@ def test_create_menu_addons():
     M.click("Create: Kanonen")
     M.ticks(10)
     M.click("Installieren")
-    M.ticks(120)
+    tick_until(lua, lambda: any("Create: Kanonen installiert" == x for x in lua_list(M.toasts)))
+    M.ticks(2)
     check("Deinstallieren" in M.screenText(), "Detailansicht aktualisiert sich nach der Installation")
     M.closeScreen()
     lua.execute('M.px, M.py, M.pz = 58, 90, 3')
@@ -319,6 +347,76 @@ def test_create_menu_addons():
     before = len(sent(lua))
     M.ticks(120)
     check(any(c.startswith("summon tnt 63.80 90.50 0.50 {fuse:80") for c in sent(lua)[before:]), "Kanone feuert TNT nach Osten")
+
+    # Verzauberungsindustrie zieht Dragons Plus mit
+    M.binds["menu"].onPress()
+    M.ticks(10)
+    M.screenKey("2")
+    M.ticks(10)
+    seen = set()
+    for _ in range(3):
+        seen |= set(M.screenText().split("\n"))
+        if any("Verzauberungsindustrie" in l for l in seen):
+            break
+        M.click("Seite")
+        M.ticks(10)
+    while "Create: Verzauberungsindustrie" not in M.screenText():
+        M.click("Seite")
+        M.ticks(10)
+    M.click("Create: Verzauberungsindustrie")
+    M.ticks(10)
+    check("Create: Dragons Plus ✖" in M.screenText(), "Verzauberungsindustrie braucht Dragons Plus")
+    M.click("Installieren")
+    tick_until(lua, lambda: any("Create: Verzauberungsindustrie installiert" == x for x in lua_list(M.toasts)), 12000)
+    toasts = lua_list(M.toasts)
+    check(toasts.index("Create: Dragons Plus installiert") < toasts.index("Create: Verzauberungsindustrie installiert"),
+          "Dragons Plus wird zuerst installiert, dann die Verzauberungsindustrie")
+    M.screenKey("3")
+    M.ticks(12)
+    deps_text = ""
+    for _ in range(4):
+        deps_text += M.screenText()
+        M.click("Seite") if "Seite" in M.screenText() else None
+        M.ticks(12)
+    check("braucht Create: Dragons Plus ✔" in deps_text and "Create: Kraftwerk:" in deps_text, "Abhängigkeiten-Tab zeigt die neuen Addons")
+    # Kraftwerk installieren (Elektrik ist schon da)
+    M.screenKey("2")
+    M.ticks(10)
+    while "Create: Kraftwerk" not in M.screenText():
+        M.click("Seite")
+        M.ticks(10)
+    M.click("Create: Kraftwerk")
+    M.ticks(10)
+    M.click("Installieren")
+    tick_until(lua, lambda: any("Create: Kraftwerk installiert" == x for x in lua_list(M.toasts)), 12000)
+    M.closeScreen()
+
+    # Verzauberer: Bücher werden zu verzauberten Büchern
+    lua.execute('M.px, M.py, M.pz = 70, 100, 3')
+    hit(lua, 69, 100, 0, "east")
+    M.runCommand("create", "setzen", "motor")            # (70,100,0)
+    hit(lua, 70, 100, 0, "east")
+    M.runCommand("create", "setzen", "verzauberer")      # (71,100,0)
+    before = len(sent(lua))
+    M.ticks(80)
+    check(any("enchanted_book" in c and "stored_enchantments" in c for c in sent(lua)[before:]), "Verzauberer verzaubert Bücher")
+    # Solarpanel + Akku: Strom am Tag, größerer Speicher
+    hit(lua, 74, 99, 0, "up")
+    M.runCommand("create", "setzen", "solar")            # (74,100,0)
+    hit(lua, 75, 99, 0, "up")
+    M.runCommand("create", "setzen", "akku")             # (75,100,0)
+    M.ticks(20)
+    out = hud_at(lua, 74, 100, 0)
+    check("/ 300000 FE" in out, "Akku erhöht den Stromspeicher (300000 FE)")
+    # Lüfter: Einfrieren vor Pulverschnee
+    lua.execute('M.facing = "east"')
+    hit(lua, 79, 100, 0, "east")
+    M.runCommand("create", "setzen", "motor")            # (80,100,0) Achse x
+    hit(lua, 80, 100, 0, "east")
+    M.runCommand("create", "setzen", "luefter")          # (81,100,0) Blick Osten
+    before = len(sent(lua))
+    M.ticks(80)
+    check(any("minecraft:powder_snow" in c and "powder_snow_bucket" in c for c in sent(lua)[before:]), "Dragons Plus: Lüfter friert vor Pulverschnee ein")
     errs = [l for l in lua_list(M.logs) if "fehlgeschlagen" in l]
     check(not errs, "keine API-Fehler im Log " + (str(errs[:2]) if errs else ""))
 

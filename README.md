@@ -5,8 +5,8 @@ Zwei inoffizielle Mods für den **Eaglercraft-26.3-Client** mit seinem eingebaut
 
 | Mod | Datei | Inhalt |
 |-----|-------|--------|
-| **Create (Eaglercraft-Port)** v0.2 | [`dist/create_zeus.zip`](dist/create_zeus.zip) | 18 Bauteile als Items, drehende 3D-Modelle, Rechtsklick-Platzierung, Schraubenschlüssel, B-Menü mit Addons (Kanonen, Elektrik, Aeronautik), Stress-System, Ingenieursbrille |
-| **Ressourcenpaket** | [`dist/create_zeus_resources.zip`](dist/create_zeus_resources.zip) | 21 eigene 3D-Modelle im Create-Stil ([Vorschau](vorschau.html)) – oder per Konverter die Original-Modelle aus deiner eigenen Create-Jar |
+| **Create (Eaglercraft-Port)** v0.3 | [`dist/create_zeus.zip`](dist/create_zeus.zip) | 22 Bauteile als Items, drehende 3D-Modelle, Rechtsklick-Platzierung, Schraubenschlüssel, B-Menü mit 6 Addons (Kanonen, Elektrik, Aeronautik, Dragons Plus, Verzauberungsindustrie, Kraftwerk) samt Abhängigkeiten, Stress-System, Ingenieursbrille |
+| **Ressourcenpaket** | [`dist/create_zeus_resources.zip`](dist/create_zeus_resources.zip) | 25 eigene 3D-Modelle im Create-Stil ([Vorschau](vorschau.html)) – oder per Konverter die Original-Modelle aus deiner eigenen Create-Jar |
 | **MC-Device (Eaglercraft-Port)** | [`dist/mc_device_zeus.zip`](dist/mc_device_zeus.zip) | Handy mit GPS/Wegpunkten, Uhr/Wecker, Wetter, Rechner, Notizen, Musik, Status, Taschenlampe, Staubsauger, Laptop für Create-Anlagen |
 
 ## Installation

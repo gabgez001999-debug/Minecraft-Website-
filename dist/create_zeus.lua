@@ -1,6 +1,6 @@
 -- name: Create (Eaglercraft-Port)
 -- id: create_zeus
--- version: 0.2.2
+-- version: 0.3.0
 -- author: Larpbase
 -- description: Inoffizieller Create-Port für Eaglercraft 26.3 (Zeus-Lua). Wellen, Zahnräder, Motoren, Bohrer, Lüfter, Presse, Mahlstein, Förderband und Stress-System.
 --
@@ -11,7 +11,7 @@
 --   * Das Kinetik-Netz (Drehzahl, Drehrichtung, Übersetzung, Stress) rechnet diese Mod in Lua,
 --     angelehnt an Create (Code MIT, (c) simibubi & Create-Team). Es werden keine Create-Assets genutzt.
 
-local MOD_VERSION = "0.2.2"
+local MOD_VERSION = "0.3.0"
 
 ---------------------------------------------------------------------------
 -- Kompatibilität: Zeus-Bibliotheken defensiv ansprechen
@@ -357,6 +357,14 @@ local TYPES = {
     source = { rpm = 128, cap = 16, electric = true },
     parts = { { item = "polished_andesite", s = { 0.22, 1.5, 0.22 } } } },
   -- Addon "Create: Aeronautik"
+  -- Addon "Create: Verzauberungsindustrie"
+  enchanter = { name = "Mechanischer Verzauberer", addon = "verzauberung", axial = true, carrier = "enchanting_table", impact = 8,
+    parts = { { item = "polished_andesite", s = { 0.22, 1.3, 0.22 } } } },
+  xp_drain = { name = "Erfahrungs-Abfluss", addon = "verzauberung", axial = true, carrier = "sculk", impact = 4,
+    parts = { { item = "polished_andesite", s = { 0.22, 1.3, 0.22 } } } },
+  -- Addon "Create: Kraftwerk" (keine Drehung, nur Strom)
+  solar_panel = { name = "Solarpanel", addon = "kraftwerk", static = true, carrier = "daylight_detector", parts = {} },
+  battery = { name = "Akku", addon = "kraftwerk", static = true, carrier = "copper_block", parts = {} },
   propeller_bearing = { name = "Propeller-Lager", addon = "aeronautik", directional = true, carrier = "polished_andesite", impact = 6,
     parts = {
       { item = "white_wool", s = { 2.6, 0.08, 0.4 }, off = 0.6 },
@@ -365,7 +373,7 @@ local TYPES = {
 }
 local TYPE_ORDER = { "shaft", "cog", "large_cog", "gearbox", "crank", "water_wheel", "motor",
   "drill", "fan", "press", "millstone", "belt", "speedometer", "stressometer",
-  "cannon", "alternator", "electric_motor", "propeller_bearing" }
+  "cannon", "alternator", "electric_motor", "propeller_bearing", "enchanter", "xp_drain", "solar_panel", "battery" }
 
 -- 3D-Modelle aus dem Ressourcenpaket (assets/create_zeus/items/<name>.json).
 -- Gleiche Ausrichtung wie die Original-Create-Modelle, damit beide Pakete passen:
@@ -390,6 +398,10 @@ local MODELS = {
   alternator = { static = "d_alt", staticAxis = true, spin = "d_shaft" },
   electric_motor = { static = "d_emotor", staticAxis = true, spin = "d_shaft" },
   propeller_bearing = { static = "d_bearing", staticFacing = true, spin = "d_bprop", off = 0.6 },
+  enchanter = { static = "d_enchanter", staticAxis = true, spin = "d_shaft" },
+  xp_drain = { static = "d_xp_drain", staticAxis = true, spin = "d_shaft" },
+  solar_panel = { static = "d_solar" },
+  battery = { static = "d_battery" },
 }
 
 -- Inventar-Items: eindeutiges Vanilla-Grunditem ohne Rechtsklick-Funktion + eigenes Modell
@@ -412,6 +424,10 @@ local KIT = {
   { "alternator", "resin_brick", "create_zeus:alternator", 8 },
   { "electric_motor", "amethyst_shard", "create_zeus:electric_motor", 8 },
   { "propeller_bearing", "nether_star", "create_zeus:propeller_bearing", 4 },
+  { "enchanter", "netherite_scrap", "create_zeus:enchanter", 4 },
+  { "xp_drain", "quartz", "create_zeus:xp_drain", 4 },
+  { "solar_panel", "glowstone_dust", "create_zeus:solar_panel", 16 },
+  { "battery", "nether_brick", "create_zeus:battery", 8 },
   { "wrench", "rabbit_foot", "create_zeus:wrench", 1 },
 }
 local PART_BY_ITEM, PART_BY_NAME = {}, {}
@@ -430,6 +446,15 @@ local ADDONS = {
   { id = "aeronautik", name = "Create: Aeronautik", inspired = "Create Aeronautics", version = "1.0.0", size = 64,
     desc = "Propeller-Lager: hebt dich und alles über dem Propeller in die Luft. Am besten mit Elektromotor.",
     deps = { "create", "elektrik" }, types = { "propeller_bearing" } },
+  { id = "dragons_plus", name = "Create: Dragons Plus", inspired = "Create: Dragons Plus", version = "1.8.1", size = 41,
+    desc = "Bibliothek für andere Addons. Neue Lüfter-Verarbeitung: vor Pulverschnee einfrieren, vor einem Drachenkopf enden.",
+    deps = { "create" }, types = {} },
+  { id = "verzauberung", name = "Create: Verzauberungsindustrie", inspired = "Create: Enchantment Industry", version = "2.5.0", size = 73,
+    desc = "Mechanischer Verzauberer macht aus Büchern verzauberte Bücher, der Erfahrungs-Abfluss saugt XP-Kugeln zu dir.",
+    deps = { "create", "dragons_plus" }, types = { "enchanter", "xp_drain" } },
+  { id = "kraftwerk", name = "Create: Kraftwerk", inspired = "Create: New Age", version = "1.1.0", size = 58,
+    desc = "Solarpanel erzeugt am Tag Strom, der Akku speichert mehr davon für deine Elektromotoren.",
+    deps = { "create", "elektrik" }, types = { "solar_panel", "battery" } },
 }
 local ADDON_BY_ID = { create = { id = "create", name = "Create (Port)", version = MOD_VERSION, core = true } }
 for _, a in ipairs(ADDONS) do ADDON_BY_ID[a.id] = a end
@@ -467,6 +492,16 @@ local WASH = {
   { "gravel", "flint" }, { "sand", "clay_ball" }, { "red_sand", "gold_nugget" }, { "soul_sand", "quartz" },
   { "magma_block", "obsidian" }, { "white_wool", "string" },
 }
+local FREEZE = {
+  { "water_bucket", "powder_snow_bucket" }, { "magma_cream", "slime_ball" }, { "blaze_rod", "breeze_rod" },
+  { "lava_bucket", "bucket" }, { "magma_block", "packed_ice" },
+}
+local ENDING = {
+  { "ender_pearl", "ender_eye" }, { "chorus_fruit", "popped_chorus_fruit" }, { "cobblestone", "end_stone" },
+  { "stone_bricks", "end_stone_bricks" }, { "purple_dye", "purpur_block" },
+}
+local ENCHANTS = { "mending", "unbreaking", "efficiency", "fortune", "sharpness", "protection", "feather_falling",
+  "looting", "power", "silk_touch", "respiration", "depth_strider" }
 local HAUNT = {
   { "soul_sand", "soul_soil" }, { "red_mushroom", "crimson_fungus" }, { "brown_mushroom", "warped_fungus" },
   { "potato", "poisonous_potato" }, { "egg", "turtle_egg" },
@@ -1035,7 +1070,7 @@ local function place(typeName, x, y, z, face)
     c.axis = (FACINGS[hf][4] == "x") and "z" or "x"
   elseif T.gearbox then
     c.axis = "y"
-  elseif T.millstone then
+  elseif T.millstone or T.static then
     c.axis = "y"
   else
     c.axis = face and FACINGS[face][4] or FACINGS[look][4]
@@ -1173,6 +1208,10 @@ local function processFan(c)
   convertItems(px, py, pz, rad, SMELT, "if block " .. cat .. " minecraft:fire ")
   convertItems(px, py, pz, rad, WASH, "if block " .. cat .. " minecraft:water ")
   convertItems(px, py, pz, rad, HAUNT, "if block " .. cat .. " minecraft:soul_fire ")
+  if addonOn("dragons_plus") then
+    convertItems(px, py, pz, rad, FREEZE, "if block " .. cat .. " minecraft:powder_snow ")
+    convertItems(px, py, pz, rad, ENDING, "if block " .. cat .. " minecraft:dragon_head ")
+  end
 end
 
 local function setPressHead(c, down)
@@ -1215,7 +1254,23 @@ local function liftPropeller(c)
 end
 
 -- Strom: Elektromotoren verbrauchen FE, gehen aus, wenn nichts mehr da ist
+local function isDay()
+  local ok, t = call(world, "timeOfDay")
+  if not ok or type(t) ~= "number" then return true end
+  if t >= 0 and t <= 1 and floor(t) ~= t then t = t * 24000 end
+  t = t % 24000
+  return t < 12500 or t > 23500
+end
+
 local function updateEnergy()
+  local akkus, solar = 0, 0
+  for _, c in pairs(comps) do
+    if c.near and typeOn(c.type) then
+      if c.type == "battery" then akkus = akkus + 1 elseif c.type == "solar_panel" then solar = solar + 1 end
+    end
+  end
+  ENERGY_MAX = 200000 + akkus * 100000
+  if solar > 0 and isDay() then energy = mmin(ENERGY_MAX, energy + solar * 40) end
   for _, c in pairs(comps) do
     if c.type == "electric_motor" and c.near and typeOn(c.type) then
       local cost = abs(c.rpm or 128) * 4
@@ -1234,7 +1289,22 @@ local function processMachines()
     local T = TYPES[c.type]
     if c.near and c.speed ~= 0 and (T.impact or T.belt) and typeOn(c.type) then
       local s = abs(c.speed)
-      if c.type == "cannon" then
+      if c.type == "enchanter" then
+        c.progress = c.progress + s
+        if c.progress >= 3600 then
+          c.progress = 0
+          local ench = ENCHANTS[math.random(#ENCHANTS)]
+          cmd(string.format(
+            'execute positioned %.1f %.1f %.1f as @e[type=item,distance=..0.9,nbt={Item:{id:"minecraft:book"}}] run data merge entity @s {Item:{id:"minecraft:enchanted_book",components:{"minecraft:stored_enchantments":{"minecraft:%s":1}}}}',
+            c.x + 0.5, c.y + 1.2, c.z + 0.5, ench))
+        end
+      elseif c.type == "xp_drain" then
+        if tickNo % 10 == 0 then
+          local r = mmax(4, mmin(16, floor(s / 16) + 4))
+          cmd(string.format("execute positioned %.1f %.1f %.1f run tp @e[type=experience_orb,distance=..%d] @p",
+            c.x + 0.5, c.y + 0.5, c.z + 0.5, r))
+        end
+      elseif c.type == "cannon" then
         c.progress = c.progress + s
         if c.progress >= 4800 then c.progress = 0; fireCannon(c) end
       elseif c.type == "alternator" then
@@ -1397,16 +1467,43 @@ local function missingDeps(id, out, seen)
   return out
 end
 
-local install = nil   -- { queue = {ids}, idx, progress }
-local STAGES = { { 0, "Verbinde …" }, { 10, "Lade herunter …" }, { 55, "Entpacke Dateien …" }, { 78, "Prüfe Abhängigkeiten …" }, { 93, "Aktiviere …" } }
-local function stageText(pr)
-  local t = STAGES[1][2]
-  for _, st in ipairs(STAGES) do if pr >= st[1] then t = st[2] end end
-  return t
+local install = nil   -- { queue, idx, progress, phase, wait, speed, stall }
+pcall(math.randomseed, floor((os.clock() or 0) * 1000003) % 2147483647)
+
+-- Tempo pro Phase zufällig: schnell, normal, langsam oder sehr langsam (Prozent pro Tick)
+local function pickSpeed()
+  local r = math.random()
+  if r < 0.30 then return 1.4 end
+  if r < 0.65 then return 0.6 end
+  if r < 0.88 then return 0.25 end
+  return 0.1
 end
+
+local function stageText()
+  if not install then return "" end
+  local a = ADDON_BY_ID[install.queue[install.idx]]
+  if install.phase == "connect" then return "Verbinde mit Server …" end
+  if install.stall > 0 then
+    return install.phase == "download" and "Warte auf Antwort vom Server …" or "Bitte warten …"
+  end
+  if install.phase == "download" then
+    return string.format("Lade herunter … %d / %d KB", floor(a.size * install.progress / 70), a.size)
+  end
+  if install.progress < 80 then return "Entpacke Dateien …" end
+  if install.progress < 92 then return "Prüfe Abhängigkeiten …" end
+  return "Aktiviere …"
+end
+
 local function bar(pr, width)
   local n = floor(mmax(0, mmin(100, pr)) / 100 * width + 0.5)
   return string.rep("█", n) .. string.rep("░", width - n)
+end
+
+local function beginAddon()
+  install.progress = 0
+  install.phase = "connect"
+  install.wait = 80          -- 4 Sekunden bei 0 %
+  install.stall = 0
 end
 
 local function startInstall(id)
@@ -1414,24 +1511,44 @@ local function startInstall(id)
   local q = missingDeps(id)
   if not addonState.installed[id] then q[#q + 1] = id end
   if #q == 0 then return end
-  install = { queue = q, idx = 1, progress = 0 }
+  install = { queue = q, idx = 1 }
+  beginAddon()
   toast("Installation gestartet: " .. ADDON_BY_ID[id].name)
+end
+
+local function finishAddon(a)
+  addonState.installed[a.id] = true
+  addonState.enabled[a.id] = true
+  saveAddons()
+  toast(a.name .. " installiert")
+  say("§a" .. a.name .. " v" .. a.version .. " installiert und aktiviert.")
+  solveNeeded = true
+  install.idx = install.idx + 1
+  if install.idx > #install.queue then install = nil else beginAddon() end
 end
 
 local function stepInstall()
   if not install then return end
   local a = ADDON_BY_ID[install.queue[install.idx]]
-  install.progress = install.progress + 100 / (24 + a.size * 0.5)
-  if install.progress >= 100 then
-    addonState.installed[a.id] = true
-    addonState.enabled[a.id] = true
-    saveAddons()
-    toast(a.name .. " installiert")
-    say("§a" .. a.name .. " v" .. a.version .. " installiert und aktiviert.")
-    solveNeeded = true
-    install.idx = install.idx + 1
-    install.progress = 0
-    if install.idx > #install.queue then install = nil end
+  if install.phase == "connect" then
+    install.wait = install.wait - 1
+    if install.wait <= 0 then install.phase = "download"; install.speed = pickSpeed() end
+    return
+  end
+  if install.stall > 0 then install.stall = install.stall - 1 return end
+  -- ab und zu hängt es kurz (1–4 Sekunden) und läuft dann weiter
+  if math.random() < 1 / 160 then install.stall = math.random(20, 80) return end
+  -- das Tempo kann sich unterwegs ändern
+  if math.random() < 1 / 200 then install.speed = pickSpeed() end
+  local sizeFactor = mmax(0.6, mmin(1.4, 45 / a.size))
+  local cap = install.phase == "download" and 70 or 100
+  install.progress = mmin(cap, install.progress + install.speed * sizeFactor * (0.4 + math.random() * 1.2))
+  if install.phase == "download" and install.progress >= 70 then
+    install.phase = "install"
+    install.speed = pickSpeed()
+    install.stall = math.random(5, 30)
+  elseif install.phase == "install" and install.progress >= 100 then
+    finishAddon(a)
   end
 end
 
@@ -1555,6 +1672,7 @@ local function menuContent()
     if install then
       local cur = ADDON_BY_ID[install.queue[install.idx]]
       L(head, string.format("%s %s %d%%", cur.name, bar(install.progress, 12), floor(install.progress)))
+      L(head, stageText() .. (#install.queue > 1 and string.format("  (%d/%d)", install.idx, #install.queue) or ""))
     end
     if addonState.installed[a.id] then
       B(head, addonState.enabled[a.id] and "✔ AN – klicken zum Ausschalten" or "✖ AUS – klicken zum Einschalten", function()
@@ -1585,6 +1703,7 @@ local function menuContent()
   if install then
     local cur = ADDON_BY_ID[install.queue[install.idx]]
     L(head, string.format("%s %s %d%%", cur.name, bar(install.progress, 12), floor(install.progress)))
+    L(head, stageText() .. (#install.queue > 1 and string.format("  (%d/%d)", install.idx, #install.queue) or ""))
   end
 
   if Menu.tab == "teile" then
@@ -1801,7 +1920,7 @@ if hud then
     pcall(ctx.rect, ctx, x - 2, 2, bw + 4, 22, 0xC0101018)
     pcall(ctx.rect, ctx, x, 14, bw, 6, 0xFF3A3A3A)
     pcall(ctx.rect, ctx, x, 14, floor(bw * mmin(100, install.progress) / 100), 6, 0xFFD6A04A)
-    pcall(ctx.text, ctx, string.format("%s – %s %d%%", a.name, stageText(install.progress), floor(install.progress)), x, 4, "#FFFFFF")
+    pcall(ctx.text, ctx, string.format("%s – %s %d%%", a.name, stageText(), floor(install.progress)), x, 4, "#FFFFFF")
   end)
   pcall(hud.add, "create_goggles", function(ctx)
     if not active or not setting("goggles") then return end
@@ -1825,8 +1944,8 @@ if hud then
       if net.conflict then lines[#lines + 1] = { "Konflikt: Drehrichtungen widersprechen sich.", "#FF5555" } end
       if net.overspeed then lines[#lines + 1] = { "Begrenzt auf 256 RPM.", "#FFAA00" } end
     end
-    if T.addon == "elektrik" then
-      lines[#lines + 1] = { string.format("Strom: %d FE%s", floor(energy), (c.type == "electric_motor" and not c.powered) and " – zu wenig!" or ""),
+    if T.addon == "elektrik" or T.addon == "kraftwerk" then
+      lines[#lines + 1] = { string.format("Strom: %d / %d FE%s", floor(energy), ENERGY_MAX, (c.type == "electric_motor" and not c.powered) and " – zu wenig!" or ""),
         (c.type == "electric_motor" and not c.powered) and "#FF5555" or "#7FD4FF" }
     end
     if T.addon and not typeOn(c.type) then lines[#lines + 1] = { "Addon deaktiviert (B → Bestätigen)", "#FF5555" } end
@@ -1852,6 +1971,7 @@ local ALIASES = {
   bohrer = "drill", luefter = "fan", ["lüfter"] = "fan", presse = "press", mahlstein = "millstone",
   band = "belt", foerderband = "belt", ["förderband"] = "belt", tacho = "speedometer", stress = "stressometer",
   kanone = "cannon", lichtmaschine = "alternator", elektromotor = "electric_motor", propeller = "propeller_bearing",
+  verzauberer = "enchanter", abfluss = "xp_drain", solar = "solar_panel", solarpanel = "solar_panel", akku = "battery",
 }
 
 local function typeFromArg(a)

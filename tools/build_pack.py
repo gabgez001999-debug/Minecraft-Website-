@@ -197,7 +197,39 @@ def tex_sail():
     return img
 
 
+def tex_solar():
+    img = Image.new("RGBA", (16, 16), (40, 52, 90, 255))
+    d = ImageDraw.Draw(img)
+    for x in range(0, 16, 4):
+        for y in range(0, 16, 4):
+            d.rectangle((x + 1, y + 1, x + 3, y + 3), fill=(52, 92, 170, 255))
+            d.point((x + 1, y + 1), fill=(150, 190, 240, 255))
+    d.rectangle((0, 0, 15, 15), outline=(170, 172, 168, 255))
+    return img
+
+
+def tex_enchant():
+    img = Image.new("RGBA", (16, 16))
+    noise_fill(img, (70, 30, 90), 0.1, 31)
+    px = img.load()
+    rnd = random.Random(32)
+    for _ in range(14):
+        px[rnd.randrange(16), rnd.randrange(16)] = (200, 140, 255, 255)
+    return img
+
+
+def tex_xp():
+    img = Image.new("RGBA", (16, 16))
+    noise_fill(img, (60, 110, 60), 0.08, 33)
+    d = ImageDraw.Draw(img)
+    for y in range(2, 16, 4):
+        d.line((1, y, 14, y), fill=(30, 50, 30, 255))
+    d.ellipse((5, 5, 10, 10), fill=(170, 240, 90, 255))
+    return img
+
+
 TEXTURES = {
+    "block/solar": tex_solar, "block/enchant": tex_enchant, "block/xp": tex_xp,
     "block/fan_grill": tex_grill, "block/copper_coil": tex_copper, "block/cannon": tex_cannon, "block/sail": tex_sail,
     "block/axis": tex_axis, "block/axis_top": tex_axis_top,
     "block/cogwheel": lambda: tex_wood((178, 132, 80), 11),
@@ -353,6 +385,24 @@ MODELS.update({
         *[box([-14, 6, 6], [30, 7.5, 10], "sail", rot=a) for a in (22.5, -22.5)],
         *[box([6, 6, -14], [10, 7.5, 30], "sail", rot=a) for a in (22.5, -22.5)],
     ], display=scaled_display(0.4)),
+    "d_enchanter": model({"casing": "andesite_casing", "top": "enchant", "brass": "brass"}, [
+        box([0, 0, 0], [16, 12, 16], "casing", end_tex="top"),
+        box([3, 12, 3], [13, 13, 13], "brass"),
+        box([4, 13, 5], [12, 15, 11], "top"),
+    ]),
+    "d_xp_drain": model({"casing": "andesite_casing", "top": "xp"}, [
+        box([0, 0, 0], [16, 13, 16], "casing", end_tex="top"),
+    ]),
+    "d_solar": model({"cell": "solar", "casing": "andesite_casing"}, [
+        box([0, 0, 0], [16, 2, 16], "casing"),
+        box([1, 2, 1], [15, 3, 15], "cell"),
+        box([7, 0, 7], [9, 2, 9], "casing"),
+    ]),
+    "d_battery": model({"coil": "copper_coil", "casing": "andesite_casing", "brass": "brass"}, [
+        box([2, 0, 2], [14, 14, 14], "coil"),
+        box([1, 0, 1], [15, 2, 15], "casing"), box([1, 12, 1], [15, 14, 15], "casing"),
+        box([6, 14, 6], [10, 16, 10], "brass"),
+    ]),
 })
 
 # Item-Definitionen: Name -> Liste von Modellen (mehrere = composite)
@@ -368,6 +418,7 @@ ITEMS = {
     "millstone": ["d_mill_b", "d_mill_i"], "speedometer": ["d_gauge"], "stressometer": ["d_gauge"],
     "cannon": ["d_cannon"], "alternator": ["d_alt"], "electric_motor": ["d_emotor"],
     "propeller_bearing": ["d_bearing", "d_bprop"],
+    "enchanter": ["d_enchanter"], "xp_drain": ["d_xp_drain"], "solar_panel": ["d_solar"], "battery": ["d_battery"],
 }
 
 
