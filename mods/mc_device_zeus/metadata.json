@@ -1,0 +1,12 @@
+{
+  "id": "mc_device_zeus",
+  "name": "MC-Device (Eaglercraft-Port)",
+  "version": "0.1.0",
+  "api": 1,
+  "main": "main.lua",
+  "minecraft": "26.3",
+  "description": "Handy für Eaglercraft 26.3 nach der Idee von Phone: MC-Device: GPS und Wegpunkte, Uhr und Wecker, Wetter, Rechner, Notizen, Taschenlampe, Musik, Status, Staubsauger und ein Laptop für Create-Anlagen.",
+  "authors": ["Larpbase"],
+  "license": "MIT",
+  "homepage": "https://github.com/gabgez001999-debug/Minecraft-Website-"
+}

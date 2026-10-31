@@ -1,0 +1,12 @@
+{
+  "id": "create_zeus",
+  "name": "Create (Eaglercraft-Port)",
+  "version": "0.1.0",
+  "api": 1,
+  "main": "main.lua",
+  "minecraft": "26.3",
+  "description": "Inoffizieller Create-Port für Eaglercraft 26.3: Wellen, Zahnräder, Getriebe, Handkurbel, Wasserrad, Kreativmotor, Bohrer, Lüfter, Presse, Mahlstein, Förderband, Tacho und Stress-System. Einzelspieler-Welt mit Cheats nötig.",
+  "authors": ["Larpbase"],
+  "license": "MIT",
+  "homepage": "https://github.com/gabgez001999-debug/Minecraft-Website-"
+}

@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Eaglercraft 26.3 Lua-Mods</title>
+<meta name="description" content="Create und MC-Device als Lua-Mods für Eaglercraft 26.3 (Zeus-Mod-System). Download, Installation und Steuerung.">
+<link rel="icon" href="mods/create_zeus/icon.png">
+<style>
+  :root {
+    --bg: #15120f; --bg2: #1d1915; --panel: #241f1a; --panel2: #2d2620; --line: #3d342b;
+    --text: #f1ebe3; --muted: #b7aa9a; --brass: #d6a04a; --brass2: #f0c46e; --copper: #c8693a;
+    --blue: #5fb6e6; --ok: #7bd389; --warn: #ffcf5a; --bad: #ff7a6b;
+    --radius: 14px;
+  }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      --bg: #f6f1ea; --bg2: #efe7dc; --panel: #ffffff; --panel2: #f7f1e8; --line: #e1d5c4;
+      --text: #231d17; --muted: #6d6153; --brass: #a8721d; --brass2: #8a5c12; --copper: #a64f24; --blue: #23709c;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background-image: radial-gradient(1200px 500px at 80% -10%, rgba(214,160,74,.16), transparent 60%),
+                      radial-gradient(900px 400px at -10% 10%, rgba(95,182,230,.10), transparent 60%);
+  }
+  a { color: var(--brass2); }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 0 16px; }
+  header { padding: 56px 0 28px; }
+  .eyebrow { display: inline-flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+  .chip { font-size: 12.5px; font-weight: 600; letter-spacing: .02em; padding: 4px 10px; border-radius: 999px;
+    border: 1px solid var(--line); background: var(--panel); color: var(--muted); }
+  .chip.brass { color: var(--brass2); border-color: rgba(214,160,74,.45); }
+  h1 { font-size: clamp(30px, 5.4vw, 52px); line-height: 1.08; margin: 0 0 14px; letter-spacing: -.02em; }
+  h1 span { color: var(--brass); }
+  .lead { font-size: 18px; color: var(--muted); max-width: 720px; margin: 0; }
+  nav.jump { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 22px; }
+  .btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: 10px; font-weight: 650;
+    text-decoration: none; border: 1px solid var(--line); background: var(--panel); color: var(--text); }
+  .btn:hover { border-color: var(--brass); }
+  .btn.primary { background: linear-gradient(180deg, var(--brass2), var(--brass)); color: #1b140b; border-color: transparent; }
+  section { padding: 30px 0; }
+  h2 { font-size: 26px; margin: 0 0 16px; letter-spacing: -.01em; }
+  h3 { margin: 0; font-size: 20px; }
+  .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; }
+  .mod-head { display: flex; gap: 14px; align-items: center; margin-bottom: 10px; }
+  .mod-head img { width: 64px; height: 64px; image-rendering: pixelated; border-radius: 12px; flex: none; }
+  .meta { font-size: 13px; color: var(--muted); }
+  ul.feat { padding-left: 18px; margin: 10px 0 16px; }
+  ul.feat li { margin: 3px 0; }
+  .dl { display: flex; gap: 8px; flex-wrap: wrap; }
+  ol.steps { counter-reset: s; list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; }
+  ol.steps li { counter-increment: s; position: relative; padding: 14px 16px 14px 56px; background: var(--panel);
+    border: 1px solid var(--line); border-radius: 12px; }
+  ol.steps li::before { content: counter(s); position: absolute; left: 14px; top: 12px; width: 30px; height: 30px;
+    border-radius: 8px; display: grid; place-items: center; font-weight: 800; background: var(--panel2); color: var(--brass2);
+    border: 1px solid var(--line); }
+  table { width: 100%; border-collapse: collapse; font-size: 15px; }
+  th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; }
+  .table-wrap { overflow-x: auto; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); }
+  kbd { font: 600 13px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; padding: 2px 7px; border-radius: 6px;
+    border: 1px solid var(--line); border-bottom-width: 2px; background: var(--panel2); color: var(--text); white-space: nowrap; }
+  code { font: 14px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background: var(--panel2); padding: 1px 6px;
+    border-radius: 6px; border: 1px solid var(--line); }
+  .note { border-left: 4px solid var(--warn); background: var(--panel); border-radius: 0 12px 12px 0; padding: 14px 16px; margin: 0 0 12px; }
+  .note.info { border-left-color: var(--blue); }
+  .note strong { color: var(--text); }
+  .two { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+  footer { padding: 34px 0 48px; color: var(--muted); font-size: 14px; border-top: 1px solid var(--line); margin-top: 20px; }
+  footer ul { padding-left: 18px; }
+  .su { font-variant-numeric: tabular-nums; color: var(--brass2); white-space: nowrap; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">
+      <span class="chip brass">Eaglercraft 26.3</span>
+      <span class="chip">Zeus-Mod-System · Lua 5.4 · API 1</span>
+      <span class="chip">Inoffiziell</span>
+    </div>
+    <h1>Create &amp; MC-Device<br><span>als Lua-Mods für Eaglercraft</span></h1>
+    <p class="lead">Zwei Mods für den Eaglercraft-26.3-Client im Browser: ein Create-Port mit drehenden Wellen,
+      Zahnrädern und Maschinen samt Stress-System, und ein Handy nach der Idee von MC-Device.
+      Herunterladen, im Mods-Menü importieren, losbauen.</p>
+    <nav class="jump">
+      <a class="btn primary" href="#download">Download</a>
+      <a class="btn" href="#install">Installation</a>
+      <a class="btn" href="#create">Create-Steuerung</a>
+      <a class="btn" href="#handy">Handy-Steuerung</a>
+      <a class="btn" href="#grenzen">Wichtig zu wissen</a>
+    </nav>
+  </header>
+
+  <section id="download">
+    <h2>Download</h2>
+    <div class="grid">
+      <article class="card">
+        <div class="mod-head">
+          <img src="mods/create_zeus/icon.png" alt="" width="64" height="64">
+          <div>
+            <h3>Create (Eaglercraft-Port)</h3>
+            <div class="meta">create_zeus · v0.1.0 · Einzelspieler mit Cheats</div>
+          </div>
+        </div>
+        <ul class="feat">
+          <li>Wellen, Zahnräder (2:1-Übersetzung), Getriebe</li>
+          <li>Handkurbel, Wasserrad, Kreativmotor (1–256 RPM)</li>
+          <li>Bohrer, Lüfter (Schmelzen, Waschen, Verfluchen), Presse, Mahlstein, Förderband</li>
+          <li>Stress-System mit Überlastung, Tacho, Stressometer, Ingenieursbrille im HUD</li>
+        </ul>
+        <div class="dl">
+          <a class="btn primary" href="dist/create_zeus.zip" download>create_zeus.zip</a>
+          <a class="btn" href="dist/create_zeus.lua" download>.lua-Einzeldatei</a>
+        </div>
+      </article>
+      <article class="card">
+        <div class="mod-head">
+          <img src="mods/mc_device_zeus/icon.png" alt="" width="64" height="64">
+          <div>
+            <h3>MC-Device (Eaglercraft-Port)</h3>
+            <div class="meta">mc_device_zeus · v0.1.0 · Einzelspieler</div>
+          </div>
+        </div>
+        <ul class="feat">
+          <li>Handy mit GPS, Wegpunkten und Navigation im HUD</li>
+          <li>Uhr und Wecker, Wetter und Zeit, Rechner, Notizen, Musik, Status</li>
+          <li>Taschenlampe (Nachtsicht) und Staubsauger (zieht Items heran)</li>
+          <li>Laptop zeigt deine Create-Anlagen, wenn beide Mods installiert sind</li>
+        </ul>
+        <div class="dl">
+          <a class="btn primary" href="dist/mc_device_zeus.zip" download>mc_device_zeus.zip</a>
+          <a class="btn" href="dist/mc_device_zeus.lua" download>.lua-Einzeldatei</a>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section id="install">
+    <h2>Installation</h2>
+    <ol class="steps">
+      <li>Öffne <a href="https://eaglercraft.com/play?version=26.3" rel="noopener">Eaglercraft 26.3</a> im Browser.</li>
+      <li>Erstelle eine <strong>Einzelspieler-Welt mit „Cheats erlauben“</strong>. Die Mods setzen Blöcke und Display-Entities per Befehl.</li>
+      <li>Hauptmenü → <strong>Mods</strong> → <strong>Importieren</strong> → die <code>.zip</code> auswählen.
+        Du kannst die Datei auch direkt auf das Mods-Fenster ziehen.</li>
+      <li>Welt betreten. <kbd>B</kbd> öffnet das Create-Baumenü, <kbd>P</kbd> das Handy.
+        Alle Tasten lassen sich unter Optionen → Steuerung ändern.</li>
+    </ol>
+  </section>
+
+  <section id="create">
+    <h2>Create: Steuerung &amp; Bauteile</h2>
+    <div class="two">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Taste</th><th>Aktion</th></tr></thead>
+          <tbody>
+            <tr><td><kbd>B</kbd></td><td>Baumenü: Bauteil auswählen</td></tr>
+            <tr><td><kbd>R</kbd></td><td>Bauteil an die angeschaute Blockseite setzen</td></tr>
+            <tr><td><kbd>V</kbd></td><td>Schraubenschlüssel: drehen, Motor einstellen, Wasserrad umkehren</td></tr>
+            <tr><td><kbd>X</kbd></td><td>Angeschautes Bauteil abbauen</td></tr>
+            <tr><td><kbd>G</kbd> halten</td><td>Handkurbel drehen (schleichen = rückwärts)</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Befehl</th><th>Wirkung</th></tr></thead>
+          <tbody>
+            <tr><td><code>/create hilfe</code></td><td>Übersicht</td></tr>
+            <tr><td><code>/create setzen &lt;teil&gt;</code></td><td>z. B. <code>welle</code>, <code>zahnrad</code>, <code>gross</code>, <code>motor</code>, <code>bohrer</code></td></tr>
+            <tr><td><code>/create motor &lt;rpm&gt;</code></td><td>Motor einstellen (negativ = rückwärts)</td></tr>
+            <tr><td><code>/create netz</code> · <code>liste</code></td><td>Netz-Infos, alle Bauteile</td></tr>
+            <tr><td><code>/create zurücksetzen</code></td><td>Alles abbauen</td></tr>
+            <tr><td><code>/create api</code></td><td>Diagnose: schreibt die Lua-API ins Mod-Log</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="table-wrap" style="margin-top:16px">
+      <table>
+        <thead><tr><th>Bauteil</th><th>Funktion</th><th>Stress</th></tr></thead>
+        <tbody>
+          <tr><td>Welle</td><td>Leitet Drehung entlang ihrer Achse weiter</td><td class="su">–</td></tr>
+          <tr><td>Zahnrad / Großes Zahnrad</td><td>Kleine nebeneinander drehen gegenläufig; groß ↔ klein diagonal = 2:1</td><td class="su">–</td></tr>
+          <tr><td>Getriebe</td><td>Lenkt Drehung auf die vier Seiten um</td><td class="su">–</td></tr>
+          <tr><td>Handkurbel</td><td>32 RPM, solange du <kbd>G</kbd> hältst</td><td class="su">+256 SU</td></tr>
+          <tr><td>Wasserrad</td><td>Dauerhaft 8 RPM</td><td class="su">+256 SU</td></tr>
+          <tr><td>Kreativmotor</td><td>1–256 RPM einstellbar</td><td class="su">+16384 SU</td></tr>
+          <tr><td>Mechanischer Bohrer</td><td>Baut den Block vor sich ab (Antrieb von hinten)</td><td class="su">4 SU/RPM</td></tr>
+          <tr><td>Lüfter</td><td>Bläst Items und Mobs; vor Lava/Feuer schmelzen, vor Wasser waschen, vor Seelenfeuer verfluchen</td><td class="su">2 SU/RPM</td></tr>
+          <tr><td>Mechanische Presse</td><td>Presst Items unter sich (z. B. Zuckerrohr → Papier, Eis → Packeis)</td><td class="su">8 SU/RPM</td></tr>
+          <tr><td>Mahlstein</td><td>Mahlt Items auf sich (Bruchstein → Kies → Sand, Blumen → Farbstoff)</td><td class="su">4 SU/RPM</td></tr>
+          <tr><td>Förderband</td><td>Transportiert Items, Mobs und dich; braucht ein drehendes Bauteil daneben</td><td class="su">–</td></tr>
+          <tr><td>Tacho / Stressometer</td><td>Zeigen Drehzahl bzw. Stress als schwebenden Text</td><td class="su">–</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="handy">
+    <h2>Handy: Steuerung</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Taste / Befehl</th><th>Aktion</th></tr></thead>
+        <tbody>
+          <tr><td><kbd>P</kbd> · <code>/handy</code></td><td>Handy öffnen</td></tr>
+          <tr><td><kbd>J</kbd></td><td>Staubsauger an/aus</td></tr>
+          <tr><td><code>/wegpunkt &lt;name&gt;</code></td><td>Aktuelle Position als Wegpunkt speichern</td></tr>
+          <tr><td><code>/notiz &lt;text&gt;</code></td><td>Notiz ins Handy schreiben</td></tr>
+          <tr><td><code>/rechne 64*3+5</code></td><td>Rechner im Chat</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="grenzen">
+    <h2>Wichtig zu wissen</h2>
+    <p class="note"><strong>Nur Einzelspieler.</strong> Der 26.3-Client pausiert alle Mods auf Servern und sobald eine Welt fürs LAN geöffnet ist.
+      Deshalb kann das Handy keine Anrufe zwischen Spielern führen, das Herzstück des Original-MC-Device.</p>
+    <p class="note"><strong>Cheats müssen an sein.</strong> Zeus-Mods können keine eigenen Blöcke registrieren.
+      Jedes Create-Bauteil ist ein Vanilla-Trägerblock plus Display-Entities, gesetzt und animiert über <code>/setblock</code>,
+      <code>/summon</code> und <code>/data</code>.</p>
+    <p class="note info"><strong>Die Lua-API ist nicht offiziell dokumentiert.</strong> Diese Mods nutzen die Funktionen, die im Client stecken,
+      und sind gegen einen nachgebauten Client getestet, aber nicht im echten Spiel. Wenn etwas nicht reagiert:
+      in den Mod-Einstellungen „Befehle mit / senden“ umschalten oder <code>/create api</code> ausführen und das Mod-Log ansehen.</p>
+  </section>
+
+  <footer>
+    <strong>Credits &amp; Quellen</strong>
+    <ul>
+      <li><a href="https://eaglercraft.com" rel="noopener">Eaglercraft</a>: Minecraft im Browser; 26.3-Client mit Zeus-Mod-System.</li>
+      <li><a href="https://github.com/Creators-of-Create/Create" rel="noopener">Create</a> von simibubi &amp; dem Create-Team:
+        Code unter MIT, Assets „All Rights Reserved“. Dieser Port übernimmt keine Assets, nur die Spielmechanik.</li>
+      <li><a href="https://www.curseforge.com/minecraft/mc-mods/phone-mc-device" rel="noopener">Phone: MC-Device</a> von NotPumpkins:
+        nur die Idee übernommen, kein Code.</li>
+      <li>Kein offizielles Produkt von Mojang, Microsoft, Eaglercraft oder den Mod-Autoren.</li>
+    </ul>
+  </footer>
+</div>
+</body>
+</html>
