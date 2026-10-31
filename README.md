@@ -13,7 +13,8 @@ Zwei inoffizielle Mods für den **Eaglercraft-26.3-Client** mit seinem eingebaut
 
 1. [eaglercraft.com/play?version=26.3](https://eaglercraft.com/play?version=26.3) öffnen.
 2. Einzelspieler-Welt **mit Cheats** erstellen.
-3. Optionen → Ressourcenpakete → `create_zeus_resources.zip` hinzufügen und aktivieren.
+3. **Ressourcenpaket (nicht bei Mods!):** Optionen → Ressourcenpakete… → „Import Pack…“ → `create_zeus_resources.zip`
+   wählen, dann links beim Paket auf den Pfeil klicken, damit es zu „Ausgewählt“ wandert → Fertig.
 4. Hauptmenü → **Mods** → **Importieren** → `create_zeus.zip` wählen (oder Datei aufs Fenster ziehen).
 5. In der Welt: `B` = Create-Menü (Tab Bauteile → „Alle Teile geben“), Teil in die Hand + Rechtsklick setzt es. `P` = Handy.
 
