@@ -2,8 +2,9 @@
 <html lang="de">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Eaglercraft 26.3 Lua-Mods</title>
+<meta name="claude:viewport-fit-sides" content="cover">
 <meta name="description" content="Create und MC-Device als Lua-Mods für Eaglercraft 26.3 (Zeus-Mod-System). Download, Installation und Steuerung.">
 <link rel="icon" href="mods/create_zeus/icon.png">
 <style>
@@ -12,12 +13,21 @@
     --text: #f1ebe3; --muted: #b7aa9a; --brass: #d6a04a; --brass2: #f0c46e; --copper: #c8693a;
     --blue: #5fb6e6; --ok: #7bd389; --warn: #ffcf5a; --bad: #ff7a6b;
     --radius: 14px;
+    color-scheme: dark;
   }
   @media (prefers-color-scheme: light) {
     :root:not([data-theme="dark"]) {
       --bg: #f6f1ea; --bg2: #efe7dc; --panel: #ffffff; --panel2: #f7f1e8; --line: #e1d5c4;
       --text: #231d17; --muted: #6d6153; --brass: #a8721d; --brass2: #8a5c12; --copper: #a64f24; --blue: #23709c;
+      --ok: #2f8a43; --warn: #b07d00; --bad: #c0392b;
+      color-scheme: light;
     }
+  }
+  :root[data-theme="light"] {
+    --bg: #f6f1ea; --bg2: #efe7dc; --panel: #ffffff; --panel2: #f7f1e8; --line: #e1d5c4;
+    --text: #231d17; --muted: #6d6153; --brass: #a8721d; --brass2: #8a5c12; --copper: #a64f24; --blue: #23709c;
+    --ok: #2f8a43; --warn: #b07d00; --bad: #c0392b;
+    color-scheme: light;
   }
   * { box-sizing: border-box; }
   html { scroll-behavior: smooth; }
@@ -28,7 +38,10 @@
                       radial-gradient(900px 400px at -10% 10%, rgba(95,182,230,.10), transparent 60%);
   }
   a { color: var(--brass2); }
-  .wrap { max-width: 1040px; margin: 0 auto; padding: 0 16px; }
+  .wrap { max-width: 1040px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  .wrap > * { min-width: 0; }
+  h1, h2, h3 { text-wrap: balance; }
+  .btn:focus-visible { outline: 2px solid var(--brass2); outline-offset: 2px; }
   header { padding: 56px 0 28px; }
   .eyebrow { display: inline-flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
   .chip { font-size: 12.5px; font-weight: 600; letter-spacing: .02em; padding: 4px 10px; border-radius: 999px;
