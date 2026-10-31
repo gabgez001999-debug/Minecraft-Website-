@@ -1,0 +1,734 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>EaglerForge Dashboard</title>
+<meta name="description" content="Instanzen anlegen, echte EaglerForge-Mods mit Abhängigkeiten herunterladen und Eaglercraft mit deinen Mods in einem neuen Tab starten.">
+<link rel="icon" href="mods/create_zeus/icon.png">
+<style>
+  /* Launcher-Layout: Topbar oben, Tabs links, Inhalt rechts, Spielen-Knopf unten rechts */
+  :root {
+    --bg: #121418; --side: #171a20; --panel: #1d2128; --panel2: #252a33; --line: #2f3540;
+    --text: #e9edf3; --muted: #9aa4b2; --accent: #f08a3c; --accent2: #ffb26b; --ok: #4fc47a; --bad: #ff6b5e; --info: #5fb6e6;
+    --radius: 12px; color-scheme: dark;
+  }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      --bg: #f3f4f7; --side: #e9ebf0; --panel: #ffffff; --panel2: #f2f4f7; --line: #d9dde5;
+      --text: #1b1f27; --muted: #5d6675; --accent: #d26a1c; --accent2: #b45309; --ok: #23864a; --bad: #c0392b; --info: #23709c;
+      color-scheme: light;
+    }
+  }
+  :root[data-theme="light"] {
+    --bg: #f3f4f7; --side: #e9ebf0; --panel: #ffffff; --panel2: #f2f4f7; --line: #d9dde5;
+    --text: #1b1f27; --muted: #5d6675; --accent: #d26a1c; --accent2: #b45309; --ok: #23864a; --bad: #c0392b; --info: #23709c;
+    color-scheme: light;
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html, body { margin: 0; height: 100%; }
+  body { background: var(--bg); color: var(--text); font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  button, input, select { font: inherit; color: inherit; }
+  a { color: var(--accent2); }
+  .app { display: grid; grid-template-columns: 220px 1fr; grid-template-rows: 60px 1fr; height: 100%; }
+  header.top { grid-column: 1 / -1; display: flex; align-items: center; gap: 12px; padding: 0 max(16px, env(safe-area-inset-right, 0px)) 0 max(16px, env(safe-area-inset-left, 0px));
+    border-bottom: 1px solid var(--line); background: var(--side); position: relative; z-index: 5; }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 750; letter-spacing: -.01em; text-decoration: none; color: var(--text); white-space: nowrap; }
+  .brand img { width: 30px; height: 30px; border-radius: 8px; image-rendering: pixelated; }
+  .brand small { color: var(--muted); font-weight: 500; }
+  .spacer { flex: 1; }
+  .inst-chip { display: flex; align-items: center; gap: 10px; padding: 7px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel); cursor: pointer; max-width: 60vw; }
+  .inst-chip:hover, .inst-chip[aria-expanded="true"] { border-color: var(--accent); }
+  .inst-chip .nm { font-weight: 650; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .inst-chip .mt { color: var(--muted); font-size: 13px; white-space: nowrap; }
+  .pop { position: absolute; right: max(16px, env(safe-area-inset-right, 0px)); top: 56px; width: min(360px, calc(100vw - 32px)); background: var(--panel); border: 1px solid var(--line);
+    border-radius: var(--radius); box-shadow: 0 18px 40px rgba(0,0,0,.35); padding: 14px; display: grid; gap: 12px; }
+  .pop h4 { margin: 0; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+  .inst-list { display: grid; gap: 6px; max-height: 210px; overflow: auto; }
+  .inst-item { display: flex; justify-content: space-between; gap: 10px; align-items: center; text-align: left; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel2); cursor: pointer; }
+  .inst-item.on { border-color: var(--accent); }
+  .inst-item span:last-child { color: var(--muted); font-size: 12px; white-space: nowrap; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .field { display: grid; gap: 4px; }
+  .field label { font-size: 13px; color: var(--muted); }
+  input[type=text], input[type=url], input[type=search], select { width: 100%; padding: 9px 11px; border-radius: 9px; border: 1px solid var(--line); background: var(--panel2); }
+  input:focus-visible, select:focus-visible, button:focus-visible { outline: 2px solid var(--accent2); outline-offset: 1px; }
+  .btn { padding: 8px 14px; border-radius: 9px; border: 1px solid var(--line); background: var(--panel2); cursor: pointer; font-weight: 600; white-space: nowrap; }
+  .btn:hover { border-color: var(--accent); }
+  .btn.primary { background: var(--accent); border-color: transparent; color: #1b1007; }
+  .btn.danger { color: var(--bad); }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+  nav.side { background: var(--side); border-right: 1px solid var(--line); padding: 14px 10px; display: flex; flex-direction: column; gap: 4px; }
+  nav.side button { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 9px; border: 0; background: transparent; cursor: pointer; text-align: left; font-weight: 600; color: var(--muted); }
+  nav.side button .ic { width: 22px; text-align: center; }
+  nav.side button .badge { margin-left: auto; font-size: 12px; background: var(--panel2); border-radius: 999px; padding: 0 8px; }
+  nav.side button[aria-selected="true"] { background: var(--panel); color: var(--text); box-shadow: inset 3px 0 0 var(--accent); }
+  main { overflow: auto; padding: 22px max(16px, env(safe-area-inset-right, 0px)) 110px 24px; min-width: 0; }
+  h1 { font-size: 24px; margin: 0 0 4px; letter-spacing: -.01em; text-wrap: balance; }
+  .sub { color: var(--muted); margin: 0 0 18px; }
+  .toolbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
+  .toolbar input[type=search] { flex: 1; min-width: 200px; }
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
+  .chip { padding: 5px 11px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); cursor: pointer; font-size: 13px; }
+  .chip[aria-pressed="true"] { border-color: var(--accent); color: var(--accent2); }
+  .grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; display: grid; gap: 10px; align-content: start; min-width: 0; }
+  .card-h { display: flex; gap: 12px; align-items: center; min-width: 0; }
+  .av { width: 44px; height: 44px; border-radius: 10px; display: grid; place-items: center; font-weight: 800; font-size: 18px; flex: none; color: #fff; }
+  .card-h div { min-width: 0; }
+  .card-h b { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .card-h small { color: var(--muted); }
+  .card p { margin: 0; color: var(--muted); font-size: 14px; }
+  .tags { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tag { font-size: 12px; padding: 1px 8px; border-radius: 6px; background: var(--panel2); color: var(--muted); }
+  .tag.dep { color: var(--info); }
+  .tag.ok { color: var(--ok); }
+  .card .actions { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+  .list { display: grid; gap: 8px; }
+  .li { display: flex; gap: 12px; align-items: center; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 12px; min-width: 0; }
+  .li .grow { flex: 1; min-width: 0; }
+  .li b { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .li small { color: var(--muted); }
+  .empty { text-align: center; color: var(--muted); padding: 40px 16px; border: 1px dashed var(--line); border-radius: var(--radius); }
+  .note { background: var(--panel); border: 1px solid var(--line); border-left: 4px solid var(--info); border-radius: 0 var(--radius) var(--radius) 0; padding: 12px 14px; margin: 0 0 14px; }
+  .note.warn { border-left-color: var(--accent); }
+  .steps { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
+  .play { position: fixed; right: max(20px, env(safe-area-inset-right, 0px)); bottom: max(20px, env(safe-area-inset-bottom, 0px)); padding: 14px 26px; border-radius: 14px; border: 0;
+    background: linear-gradient(180deg, var(--accent2), var(--accent)); color: #1b1007; font-weight: 800; font-size: 17px; cursor: pointer; box-shadow: 0 10px 28px rgba(240,138,60,.35); z-index: 6; }
+  .play small { display: block; font-weight: 600; font-size: 11px; opacity: .75; }
+  .dlbar { position: fixed; left: 50%; transform: translateX(-50%); bottom: max(20px, env(safe-area-inset-bottom, 0px)); width: min(420px, calc(100vw - 32px)); background: var(--panel); border: 1px solid var(--line);
+    border-radius: var(--radius); padding: 10px 14px; box-shadow: 0 10px 28px rgba(0,0,0,.3); z-index: 7; }
+  .dlbar .bar, .bar { height: 8px; border-radius: 5px; background: var(--panel2); overflow: hidden; margin-top: 6px; }
+  .bar > div { height: 100%; width: 0; background: linear-gradient(90deg, var(--accent), var(--accent2)); transition: width .15s; }
+  .modal-bg { position: fixed; inset: 0; background: rgba(5,6,8,.6); display: grid; place-items: center; z-index: 20; padding: 16px; }
+  .modal { width: min(480px, 100%); background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 20px; display: grid; gap: 14px; box-shadow: 0 30px 60px rgba(0,0,0,.45);
+    animation: pop .18s ease-out; max-height: calc(100vh - 32px); overflow: auto; }
+  .modal h2 { margin: 0; font-size: 20px; }
+  .modal p { margin: 0; color: var(--muted); }
+  .modal .actions { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+  .loader-pick { display: grid; gap: 8px; }
+  .loader-opt { display: flex; gap: 10px; align-items: center; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel2); cursor: pointer; }
+  .loader-opt input { accent-color: var(--accent); }
+  .loader-opt.off { opacity: .55; cursor: not-allowed; }
+  #toasts { position: fixed; top: max(70px, env(safe-area-inset-top, 0px)); right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 8px; z-index: 30; width: min(320px, calc(100vw - 32px)); }
+  .toast { background: var(--panel); border: 1px solid var(--line); border-left: 4px solid var(--ok); border-radius: 10px; padding: 10px 12px; box-shadow: 0 10px 24px rgba(0,0,0,.3); animation: pop .2s ease-out; }
+  .toast.bad { border-left-color: var(--bad); }
+  @keyframes pop { from { transform: translateY(-6px) scale(.98); opacity: 0; } to { transform: none; opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) { .modal, .toast { animation: none; } .bar > div { transition: none; } }
+  code { font: 13px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background: var(--panel2); padding: 1px 5px; border-radius: 5px; }
+  .copy { display: flex; gap: 8px; }
+  .copy input { flex: 1; min-width: 0; }
+  @media (max-width: 760px) {
+    .app { grid-template-columns: 1fr; grid-template-rows: 60px 1fr 58px; }
+    nav.side { grid-row: 3; flex-direction: row; border-right: 0; border-top: 1px solid var(--line); padding: 6px; justify-content: space-around; }
+    nav.side button { flex-direction: column; gap: 2px; padding: 6px 8px; font-size: 12px; }
+    nav.side button .badge { display: none; }
+    nav.side button[aria-selected="true"] { box-shadow: inset 0 3px 0 var(--accent); }
+    .brand > span { display: none; }
+    .inst-chip { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 8px; row-gap: 0; padding: 5px 10px; max-width: calc(100vw - 90px); text-align: left; }
+    .inst-chip .nm { grid-column: 1; line-height: 1.25; }
+    .inst-chip .mt { grid-column: 1; grid-row: 2; font-size: 12px; line-height: 1.25; }
+    .inst-chip > [aria-hidden] { grid-column: 2; grid-row: 1 / 3; align-self: center; }
+    main { padding: 16px max(16px, env(safe-area-inset-right, 0px)) 150px max(16px, env(safe-area-inset-left, 0px)); }
+    .play { bottom: 72px; }
+    .dlbar { bottom: 136px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <a class="brand" href="./"><img src="mods/create_zeus/icon.png" alt=""><span>Mod-Dashboard <small>EaglerForge</small></span></a>
+    <div class="spacer"></div>
+    <button class="inst-chip" id="inst-btn" aria-haspopup="true" aria-expanded="false">
+      <span class="nm" id="inst-name">–</span><span class="mt" id="inst-meta"></span><span aria-hidden="true">▾</span>
+    </button>
+    <div class="pop" id="inst-pop" hidden></div>
+  </header>
+  <nav class="side" role="tablist" aria-label="Bereiche">
+    <button role="tab" data-tab="mods" aria-selected="true"><span class="ic">▤</span>Mods<span class="badge" id="mods-count">0</span></button>
+    <button role="tab" data-tab="discover" aria-selected="false"><span class="ic">⌕</span>Mods entdecken</button>
+    <button role="tab" data-tab="multi" aria-selected="false"><span class="ic">⇄</span>Mehrspieler</button>
+    <button role="tab" data-tab="settings" aria-selected="false"><span class="ic">⚙</span>Einstellungen</button>
+  </nav>
+  <main id="main"></main>
+</div>
+<button class="play" id="play">▶ Spielen<small id="play-sub">EaglerForge</small></button>
+<div class="dlbar" id="dlbar" hidden><div id="dl-text">Lade herunter …</div><div class="bar"><div id="dl-fill"></div></div></div>
+<div id="modal-root"></div>
+<div id="toasts" aria-live="polite"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>
+(function () {
+  'use strict';
+  // ------------------------------------------------------------------ Daten
+  const LOADERS = [
+    { id: 'eaglerforge', name: 'EaglerForge', versions: ['1.8.8', '1.12.2'], note: 'JavaScript-Mods, läuft im Browser' },
+  ];
+  const STORE = 'efdash.v1';
+  const VIDEO = 'https://www.youtube.com/watch?v=XJq0q6dEqG4';
+  const INJECTOR = 'https://eaglerforge.github.io/EaglerForgeInjector/';
+  const DOWNLOADS = 'https://eaglercraft.com/downloads';
+  const CATS = ['Alle', 'Inhalt', 'Werkzeug', 'Befehle', 'Grafik', 'Spaß', 'Bibliothek', 'Trick'];
+  const COLORS = ['#e0703a', '#3a8fe0', '#4fb36b', '#b35fd6', '#d6a23a', '#3ab8b0', '#d65f7d', '#7d8bd6'];
+
+  let state = loadState();
+  let catalog = [];
+  let tab = 'mods';
+  let filter = { q: '', cat: 'Alle', onlyFit: true };
+
+  function loadState() {
+    try {
+      const s = JSON.parse(localStorage.getItem(STORE) || 'null');
+      if (s && Array.isArray(s.instances)) return Object.assign({ settings: {} }, s);
+    } catch (e) { /* privat/gesperrt */ }
+    return { instances: [], current: null, settings: {} };
+  }
+  function save() { try { localStorage.setItem(STORE, JSON.stringify(state)); } catch (e) { /* ignorieren */ } }
+  const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const $ = (sel, root) => (root || document).querySelector(sel);
+  const cur = () => state.instances.find((i) => i.id === state.current) || state.instances[0] || null;
+  const loaderOf = (id) => LOADERS.find((l) => l.id === id) || LOADERS[0];
+  const modById = (id) => catalog.find((m) => m.id === id);
+  const kb = (n) => n > 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB';
+  function color(id) { let h = 0; for (const c of id) h = (h * 31 + c.charCodeAt(0)) >>> 0; return COLORS[h % COLORS.length]; }
+
+  // ------------------------------------------------------------------ IndexedDB (EaglerForge-Client, eigene Mods)
+  let dbp = null;
+  function db() {
+    if (!dbp) dbp = new Promise((res, rej) => {
+      try {
+        const r = indexedDB.open('efdash', 1);
+        r.onupgradeneeded = () => r.result.createObjectStore('files');
+        r.onsuccess = () => res(r.result);
+        r.onerror = () => rej(r.error);
+      } catch (e) { rej(e); }
+    });
+    return dbp;
+  }
+  async function idb(mode, fn) {
+    const d = await db();
+    return new Promise((res, rej) => {
+      const tx = d.transaction('files', mode);
+      const req = fn(tx.objectStore('files'));
+      tx.oncomplete = () => res(req && req.result);
+      tx.onerror = () => rej(tx.error);
+    });
+  }
+  const idbPut = (k, v) => idb('readwrite', (s) => s.put(v, k));
+  const idbGet = (k) => idb('readonly', (s) => s.get(k)).catch(() => undefined);
+  const idbDel = (k) => idb('readwrite', (s) => s.delete(k)).catch(() => undefined);
+
+  // ------------------------------------------------------------------ UI-Helfer
+  function toast(text, bad) {
+    const t = document.createElement('div');
+    t.className = 'toast' + (bad ? ' bad' : '');
+    t.textContent = text;
+    $('#toasts').appendChild(t);
+    setTimeout(() => t.remove(), 4200);
+  }
+  function modal({ title, html, actions, dismissable = true, onOpen }) {
+    return new Promise((resolve) => {
+      const bg = document.createElement('div');
+      bg.className = 'modal-bg';
+      bg.innerHTML = `<div class="modal" role="dialog" aria-modal="true" aria-label="${esc(title)}"><h2>${esc(title)}</h2>${html || ''}<div class="actions"></div></div>`;
+      const box = $('.actions', bg);
+      const close = (v) => { bg.remove(); resolve(v); };
+      (actions || [{ label: 'OK', value: true, kind: 'primary' }]).forEach((a) => {
+        const b = document.createElement('button');
+        b.className = 'btn' + (a.kind ? ' ' + a.kind : '');
+        b.textContent = a.label;
+        b.addEventListener('click', () => {
+          if (a.validate && !a.validate(bg)) return;
+          close(a.read ? a.read(bg) : a.value);
+        });
+        box.appendChild(b);
+      });
+      if (dismissable) {
+        bg.addEventListener('click', (e) => { if (e.target === bg) close(null); });
+        bg.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(null); });
+      }
+      bg.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && e.target.matches('input[type=text]')) { const p = $('.btn.primary', bg); if (p) p.click(); }
+      });
+      $('#modal-root').appendChild(bg);
+      if (onOpen) onOpen(bg);
+      const first = bg.querySelector('input, select, .btn.primary, .btn');
+      if (first) first.focus();
+    });
+  }
+
+  // ------------------------------------------------------------------ Instanzen
+  function loaderPicker(selected) {
+    return `<div class="field"><label>Mod-Loader</label><div class="loader-pick">${LOADERS.map((l) => `
+      <label class="loader-opt"><input type="radio" name="loader" value="${l.id}" ${l.id === selected ? 'checked' : ''}>
+      <span><b>${esc(l.name)}</b><br><small>${esc(l.note)}</small></span></label>`).join('')}</div></div>`;
+  }
+  function versionSelect(selected) {
+    const vs = LOADERS[0].versions;
+    return `<div class="field"><label for="f-ver">Minecraft-Version</label><select id="f-ver">${vs.map((v) =>
+      `<option value="${v}" ${v === selected ? 'selected' : ''}>Eaglercraft ${v}</option>`).join('')}</select></div>`;
+  }
+  async function createInstanceDialog(required) {
+    const r = await modal({
+      title: required ? 'Willkommen! Erstelle deine erste Instanz' : 'Neue Instanz',
+      dismissable: !required,
+      html: `<p>Eine Instanz ist ein eigenes Minecraft mit eigener Version, eigenem Loader und eigenen Mods.</p>
+        <div class="field"><label for="f-name">Name</label><input type="text" id="f-name" maxlength="40" placeholder="z. B. Meine Mod-Welt" value="${required ? 'Meine Mod-Welt' : ''}"></div>
+        ${versionSelect('1.8.8')}${loaderPicker('eaglerforge')}`,
+      actions: [
+        ...(required ? [] : [{ label: 'Abbrechen', value: null }]),
+        { label: 'Erstellen', kind: 'primary',
+          validate: (bg) => { const ok = $('#f-name', bg).value.trim().length > 0; if (!ok) $('#f-name', bg).focus(); return ok; },
+          read: (bg) => ({ name: $('#f-name', bg).value.trim(), version: $('#f-ver', bg).value,
+            loader: (bg.querySelector('input[name=loader]:checked') || {}).value || 'eaglerforge' }) },
+      ],
+    });
+    if (!r) return null;
+    const inst = { id: uid(), name: r.name, version: r.version, loader: r.loader, mods: [], created: Date.now() };
+    state.instances.push(inst);
+    state.current = inst.id;
+    save();
+    render();
+    toast('Instanz „' + inst.name + '“ erstellt');
+    return inst;
+  }
+
+  function renderTop() {
+    const i = cur();
+    $('#inst-name').textContent = i ? i.name : 'Keine Instanz';
+    $('#inst-meta').textContent = i ? loaderOf(i.loader).name + ' · ' + i.version : '';
+    $('#mods-count').textContent = i ? i.mods.length : 0;
+    $('#play-sub').textContent = i ? i.name : 'EaglerForge';
+  }
+  function togglePop(force) {
+    const pop = $('#inst-pop'), btn = $('#inst-btn');
+    const open = force != null ? force : pop.hidden;
+    pop.hidden = !open;
+    btn.setAttribute('aria-expanded', String(open));
+    if (open) renderPop();
+  }
+  function renderPop() {
+    const i = cur();
+    const pop = $('#inst-pop');
+    pop.innerHTML = `<h4>Instanzen</h4><div class="inst-list">${state.instances.map((x) => `
+        <button class="inst-item ${x.id === state.current ? 'on' : ''}" data-id="${x.id}"><span>${esc(x.name)}</span><span>${esc(loaderOf(x.loader).name)} · ${x.version} · ${x.mods.length} Mods</span></button>`).join('')}
+      </div><button class="btn" id="pop-new">+ Neue Instanz</button>
+      ${i ? `<h4>Aktuelle Instanz</h4>
+      <div class="field"><label for="pop-name">Name</label><input type="text" id="pop-name" maxlength="40" value="${esc(i.name)}"></div>
+      <div class="field"><label for="pop-loader">Mod-Loader</label><select id="pop-loader">${LOADERS.map((l) => `<option value="${l.id}" ${l.id === i.loader ? 'selected' : ''}>${esc(l.name)}</option>`).join('')}</select></div>
+      <div class="field"><label for="pop-ver">Minecraft-Version</label><select id="pop-ver">${loaderOf(i.loader).versions.map((v) => `<option ${v === i.version ? 'selected' : ''}>${v}</option>`).join('')}</select></div>
+      <div class="row"><button class="btn danger" id="pop-del">Instanz löschen</button></div>` : ''}`;
+    pop.querySelectorAll('.inst-item').forEach((b) => b.addEventListener('click', () => {
+      state.current = b.dataset.id; save(); render(); renderPop(); toast('Instanz gewechselt: ' + cur().name);
+    }));
+    $('#pop-new').addEventListener('click', () => { togglePop(false); createInstanceDialog(false); });
+    if (!i) return;
+    $('#pop-name').addEventListener('change', (e) => { i.name = e.target.value.trim() || i.name; save(); render(); });
+    $('#pop-loader').addEventListener('change', (e) => { i.loader = e.target.value; save(); render(); renderPop(); });
+    $('#pop-ver').addEventListener('change', (e) => {
+      i.version = e.target.value; save(); render();
+      const bad = i.mods.filter((m) => !m.custom && modById(m.id) && !modById(m.id).versions.includes(i.version));
+      if (bad.length) toast(bad.length + ' Mod(s) passen nicht zu ' + i.version, true);
+    });
+    $('#pop-del').addEventListener('click', async () => {
+      const ok = await modal({ title: 'Instanz löschen?', html: `<p>„${esc(i.name)}“ und ihre Mod-Liste werden entfernt.</p>`,
+        actions: [{ label: 'Abbrechen', value: false }, { label: 'Löschen', kind: 'primary', value: true }] });
+      if (!ok) return;
+      state.instances = state.instances.filter((x) => x.id !== i.id);
+      state.current = state.instances[0] ? state.instances[0].id : null;
+      save(); togglePop(false); render();
+      if (!state.instances.length) createInstanceDialog(true);
+    });
+  }
+
+  // ------------------------------------------------------------------ Mods installieren
+  function depsOf(id, seen = new Set()) {
+    const m = modById(id);
+    if (!m) return [];
+    const out = [];
+    for (const d of m.dependencies) {
+      if (seen.has(d)) continue;
+      seen.add(d);
+      out.push(...depsOf(d, seen), d);
+    }
+    return [...new Set(out)];
+  }
+  const has = (i, id) => i.mods.some((m) => m.id === id);
+
+  async function install(id) {
+    const i = cur();
+    const m = modById(id);
+    if (!i || !m) return;
+    const missing = depsOf(id).filter((d) => !has(i, d));
+    let list = [id];
+    if (missing.length) {
+      const names = missing.map((d) => modById(d).title);
+      const r = await modal({
+        title: 'Abhängigkeiten benötigt',
+        html: `<p>„${esc(m.title)}“ braucht diese Mods, um zu funktionieren:</p><ul class="steps">${names.map((n) => `<li><b>${esc(n)}</b></li>`).join('')}</ul><p>Sollen sie auch heruntergeladen werden?</p>`,
+        actions: [{ label: 'Abbrechen', value: null }, { label: 'Nein, nur ' + m.title, value: 'only' }, { label: 'Ja, alles herunterladen', kind: 'primary', value: 'all' }],
+      });
+      if (!r) return;
+      list = r === 'all' ? [...missing, id] : [id];
+    }
+    await download(i, list);
+  }
+
+  async function fetchWithProgress(url, onProgress) {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const total = Number(res.headers.get('content-length')) || 0;
+    if (!res.body || !res.body.getReader) { const t = await res.text(); onProgress(1); return t; }
+    const reader = res.body.getReader();
+    const chunks = [];
+    let got = 0;
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      chunks.push(value);
+      got += value.length;
+      onProgress(total ? got / total : 0.5);
+    }
+    return new TextDecoder().decode(await new Blob(chunks).arrayBuffer());
+  }
+
+  async function download(i, ids) {
+    const bar = $('#dlbar'), fill = $('#dl-fill'), text = $('#dl-text');
+    bar.hidden = false;
+    let n = 0;
+    for (const id of ids) {
+      const m = modById(id);
+      if (!m || has(i, id)) { n++; continue; }
+      try {
+        const code = await fetchWithProgress(m.url, (p) => {
+          text.textContent = `Lade ${m.title} herunter … (${n + 1}/${ids.length})`;
+          fill.style.width = Math.round(((n + p) / ids.length) * 100) + '%';
+        });
+        await idbPut('mod:' + id, code).catch(() => {});
+        i.mods.push({ id, title: m.title, added: Date.now() });
+        save();
+        toast(m.title + ' heruntergeladen');
+      } catch (e) {
+        toast(m.title + ': Download fehlgeschlagen (' + e.message + ')', true);
+      }
+      n++;
+      fill.style.width = Math.round((n / ids.length) * 100) + '%';
+    }
+    setTimeout(() => { bar.hidden = true; fill.style.width = '0'; }, 600);
+    render();
+  }
+
+  async function removeMod(id) {
+    const i = cur();
+    const users = i.mods.filter((m) => !m.custom && modById(m.id) && depsOf(m.id).includes(id)).map((m) => m.title);
+    if (users.length) {
+      const ok = await modal({ title: 'Wird noch gebraucht', html: `<p>${esc(users.join(', '))} braucht diese Mod. Trotzdem entfernen?</p>`,
+        actions: [{ label: 'Abbrechen', value: false }, { label: 'Entfernen', kind: 'primary', value: true }] });
+      if (!ok) return;
+    }
+    const m = i.mods.find((x) => x.id === id);
+    i.mods = i.mods.filter((x) => x.id !== id);
+    if (m && m.custom) idbDel('custom:' + i.id + ':' + id);
+    save(); render();
+    toast((m ? m.title : 'Mod') + ' entfernt');
+  }
+
+  async function addCustom(file) {
+    const i = cur();
+    if (!/\.js$/i.test(file.name)) { toast('Bitte eine .js-Datei (EaglerForge-Mod) wählen', true); return; }
+    const id = 'custom-' + uid();
+    await idbPut('custom:' + i.id + ':' + id, await file.text());
+    i.mods.push({ id, title: file.name.replace(/\.js$/i, ''), custom: true, size: file.size, added: Date.now() });
+    save(); render();
+    toast(file.name + ' hinzugefügt');
+  }
+
+  async function saveFile(id) {
+    const i = cur();
+    const m = i.mods.find((x) => x.id === id);
+    const code = m && m.custom ? await idbGet('custom:' + i.id + ':' + id) : await idbGet('mod:' + id);
+    const name = m && m.custom ? m.title + '.js' : (modById(id) || {}).file || id + '.js';
+    let blob = code ? new Blob([code], { type: 'text/javascript' }) : null;
+    if (!blob && modById(id)) blob = new Blob([await (await fetch(modById(id).url)).text()], { type: 'text/javascript' });
+    if (!blob) return;
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  }
+
+  async function exportZip() {
+    const i = cur();
+    if (!i || !i.mods.length) { toast('Die Instanz hat noch keine Mods', true); return; }
+    const zip = new JSZip();
+    const folder = zip.folder('mods');
+    for (const m of i.mods) {
+      const code = m.custom ? await idbGet('custom:' + i.id + ':' + m.id) : (await idbGet('mod:' + m.id)) || await (await fetch(modById(m.id).url)).text();
+      folder.file(m.custom ? m.title + '.js' : modById(m.id).file, code || '');
+    }
+    zip.file('instanz.json', JSON.stringify({ name: i.name, loader: i.loader, version: i.version, mods: i.mods.map((m) => m.id) }, null, 1));
+    const blob = await zip.generateAsync({ type: 'blob' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = i.name.replace(/[^\w-]+/g, '_') + '-mods.zip'; document.body.appendChild(a); a.click(); a.remove();
+  }
+
+  // ------------------------------------------------------------------ Spielen
+  function orderedMods(i) {
+    const order = [];
+    const visit = (id) => { if (order.includes(id)) return; depsOf(id).forEach(visit); if (has(i, id)) order.push(id); };
+    i.mods.filter((m) => !m.custom).forEach((m) => visit(m.id));
+    return order;
+  }
+  async function modUrls(i, forBlobPage) {
+    const urls = orderedMods(i).map((id) => modById(id).url);
+    if (forBlobPage) {
+      for (const m of i.mods.filter((x) => x.custom)) {
+        const code = await idbGet('custom:' + i.id + ':' + m.id);
+        // data:-URL statt blob:, damit eigene Mods auch nach Schließen des Dashboards laden
+        if (code) urls.push('data:text/javascript;charset=utf-8,' + encodeURIComponent(code));
+      }
+    }
+    return urls;
+  }
+  function injectMods(html, urls) {
+    // Setzt eaglercraftXOpts.Mods, auch wenn die Seite die Optionen später selbst zuweist
+    const js = `<script>(function(){var mods=${JSON.stringify(urls).replace(/</g, '\\u003c')};var v={Mods:mods.slice()};try{Object.defineProperty(window,'eaglercraftXOpts',{configurable:true,get:function(){return v;},set:function(o){if(o&&typeof o==='object'){o.Mods=(Array.isArray(o.Mods)?o.Mods:[]).concat(mods);}v=o;}});}catch(e){window.eaglercraftXOpts=v;}})();<\/script>`;
+    // let/const würde die Eigenschaft überdecken, var nutzt den Setter
+    html = html.replace(/\b(?:const|let)\s+eaglercraftXOpts\b/g, 'var eaglercraftXOpts');
+    return /<head[^>]*>/i.test(html) ? html.replace(/<head[^>]*>/i, (m) => m + js) : js + html;
+  }
+  async function play() {
+    const i = cur();
+    if (!i) { createInstanceDialog(true); return; }
+    const client = state.settings.clientStored ? true : false;
+    const url = (state.settings.clientUrl || '').trim();
+    if (!client && !url) { setupGuide(); return; }
+    const win = window.open('', '_blank');
+    if (!win) { toast('Bitte Pop-ups für diese Seite erlauben', true); return; }
+    try { win.document.write('<title>EaglerForge startet …</title><body style="background:#121418;color:#e9edf3;font:16px system-ui;display:grid;place-items:center;height:100vh;margin:0">EaglerForge startet mit ' + i.mods.length + ' Mods …</body>'); } catch (e) { /* ignorieren */ }
+    try {
+      if (client) {
+        const html = await idbGet('client');
+        if (!html) throw new Error('Client nicht gefunden – bitte in den Einstellungen neu hochladen');
+        const page = injectMods(html, await modUrls(i, true));
+        win.location.href = URL.createObjectURL(new Blob([page], { type: 'text/html' }));
+      } else {
+        const u = new URL(url);
+        (await modUrls(i, false)).forEach((m) => u.searchParams.append('mod', m));
+        if (i.mods.some((m) => m.custom)) toast('Eigene Mods gehen nur mit hochgeladenem Client', true);
+        win.location.href = u.toString();
+      }
+      i.lastPlayed = Date.now(); save();
+      toast('EaglerForge gestartet: ' + i.name);
+    } catch (e) {
+      win.close();
+      toast('Start fehlgeschlagen: ' + e.message, true);
+    }
+  }
+  function setupGuide() {
+    modal({
+      title: 'EaglerForge einrichten',
+      html: `<p>Damit „Spielen“ funktioniert, braucht das Dashboard einmal deinen eigenen EaglerForge-Client. So geht's (wie im Video von radmanplays):</p>
+        <ol class="steps">
+          <li>Den <b>EaglercraftX 1.8</b>-Offline-Download holen: <a href="${DOWNLOADS}" target="_blank" rel="noopener">eaglercraft.com/downloads</a></li>
+          <li>Den <a href="${INJECTOR}" target="_blank" rel="noopener">EaglerForge Injector</a> öffnen und die Datei dort hochladen. Heraus kommt eine <code>processed.html</code>.</li>
+          <li>Diese <code>processed.html</code> unter <b>Einstellungen</b> hier hochladen.</li>
+        </ol>
+        <p><a href="${VIDEO}" target="_blank" rel="noopener">Video-Anleitung ansehen</a></p>`,
+      actions: [{ label: 'Später', value: false }, { label: 'Zu den Einstellungen', kind: 'primary', value: true }],
+    }).then((go) => { if (go) setTab('settings'); });
+  }
+
+  // ------------------------------------------------------------------ Teilen / Mehrspieler
+  const b64 = (s) => btoa(unescape(encodeURIComponent(s))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  const unb64 = (s) => decodeURIComponent(escape(atob(s.replace(/-/g, '+').replace(/_/g, '/'))));
+  function shareLink(i) {
+    const data = { n: i.name, v: i.version, l: i.loader, m: i.mods.filter((m) => !m.custom).map((m) => m.id) };
+    return location.origin + location.pathname + '#join=' + b64(JSON.stringify(data));
+  }
+  async function handleJoin() {
+    const mt = location.hash.match(/^#join=(.+)$/);
+    if (!mt) return false;
+    history.replaceState(null, '', location.pathname);
+    let data;
+    try { data = JSON.parse(unb64(mt[1])); } catch (e) { toast('Der Einladungslink ist kaputt', true); return false; }
+    const want = (data.m || []).filter((id) => modById(id));
+    const match = state.instances.find((x) => x.version === data.v && x.loader === data.l && want.every((id) => has(x, id)));
+    if (match) {
+      await modal({ title: 'Du bist bereit', html: `<p>Deine Instanz „${esc(match.name)}“ hat schon alle ${want.length} Mods von „${esc(data.n)}“.</p>`,
+        actions: [{ label: 'Diese Instanz nehmen', kind: 'primary', value: true }] });
+      state.current = match.id; save(); render();
+      return true;
+    }
+    const ok = await modal({
+      title: 'Andere Mods in dieser Welt',
+      html: `<p>Die Welt „${esc(data.n)}“ (${esc(loaderOf(data.l).name)} ${esc(data.v)}) nutzt ${want.length} Mods, die du nicht alle hast:</p>
+        <ul class="steps">${want.map((id) => `<li>${esc(modById(id).title)}</li>`).join('')}</ul>
+        <p>Soll eine neue Instanz mit allen Mods dieser Welt erstellt werden?</p>`,
+      actions: [{ label: 'Nein', value: false }, { label: 'Ja, Instanz erstellen', kind: 'primary', value: true }],
+    });
+    if (!ok) return true;
+    const inst = { id: uid(), name: data.n + ' (geteilt)', version: data.v || '1.8.8', loader: data.l || 'eaglerforge', mods: [], created: Date.now() };
+    state.instances.push(inst); state.current = inst.id; save(); render();
+    await download(inst, orderedFrom(want));
+    return true;
+  }
+  function orderedFrom(ids) {
+    const out = [];
+    const visit = (id) => { if (out.includes(id)) return; depsOf(id).forEach(visit); out.push(id); };
+    ids.forEach(visit);
+    return out;
+  }
+
+  // ------------------------------------------------------------------ Seiten
+  function setTab(t) {
+    tab = t;
+    document.querySelectorAll('nav.side button').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tab === t)));
+    renderMain();
+  }
+  function avatar(id, title) { return `<div class="av" style="background:${color(id)}">${esc((title || '?').replace(/[^A-Za-zÄÖÜäöü0-9/]/g, '').charAt(0).toUpperCase() || '?')}</div>`; }
+
+  function viewMods(i) {
+    const items = i.mods.map((m) => {
+      const c = modById(m.id);
+      const fits = m.custom || !c || c.versions.includes(i.version);
+      const deps = c ? c.dependencies.map((d) => (modById(d) || {}).title).filter(Boolean) : [];
+      return `<div class="li">${avatar(m.id, m.title)}<div class="grow"><b>${esc(m.title)}</b>
+        <small>${m.custom ? 'Eigene Mod · ' + kb(m.size || 0) : esc(c ? c.author : '') + (deps.length ? ' · braucht ' + esc(deps.join(', ')) : '')}${fits ? '' : ' · <span style="color:var(--bad)">passt nicht zu ' + i.version + '</span>'}</small></div>
+        <button class="btn" data-save="${m.id}" title="Als .js speichern">⤓</button><button class="btn danger" data-rm="${m.id}">Entfernen</button></div>`;
+    }).join('');
+    return `<h1>Mods in „${esc(i.name)}“</h1><p class="sub">${esc(loaderOf(i.loader).name)} · Eaglercraft ${i.version} · ${i.mods.length} Mods</p>
+      <div class="toolbar"><button class="btn primary" data-go="discover">Mods entdecken</button>
+        <label class="btn" for="custom-file">Eigene Mod (.js) hinzufügen</label><input type="file" id="custom-file" accept=".js" hidden>
+        <button class="btn" id="export">Als .zip exportieren</button></div>
+      ${items ? `<div class="list">${items}</div>` : `<div class="empty">Noch keine Mods. Unter <b>Mods entdecken</b> findest du echte EaglerForge-Mods.</div>`}`;
+  }
+
+  function viewDiscover(i) {
+    const q = filter.q.toLowerCase();
+    const list = catalog.filter((m) => (filter.cat === 'Alle' || m.category === filter.cat) &&
+      (!q || (m.title + ' ' + m.description + ' ' + m.author).toLowerCase().includes(q)) &&
+      (!filter.onlyFit || m.versions.includes(i.version)));
+    const cards = list.map((m) => {
+      const installed = has(i, m.id);
+      const fits = m.versions.includes(i.version);
+      const deps = m.dependencies.map((d) => modById(d).title);
+      return `<article class="card"><div class="card-h">${avatar(m.id, m.title)}<div><b>${esc(m.title)}</b><small>von ${esc(m.author)}</small></div></div>
+        <p>${esc(m.description)}</p>
+        <div class="tags"><span class="tag">${esc(m.category)}</span><span class="tag">${m.versions.join(' / ')}</span><span class="tag">${kb(m.size)}</span>
+          ${deps.map((d) => `<span class="tag dep">braucht ${esc(d)}</span>`).join('')}${installed ? '<span class="tag ok">installiert</span>' : ''}</div>
+        <div class="actions">${installed ? '<button class="btn" disabled>✓ Installiert</button>' :
+          fits ? `<button class="btn primary" data-install="${m.id}">Herunterladen</button>` : `<button class="btn" disabled>Nur für ${m.versions.join(', ')}</button>`}</div></article>`;
+    }).join('');
+    return `<h1>Mods entdecken</h1><p class="sub">${catalog.length} echte EaglerForge-Mods aus dem offiziellen Repository (MIT-Lizenz). Abhängigkeiten werden erkannt.</p>
+      <div class="toolbar"><input type="search" id="q" placeholder="Mods suchen …" value="${esc(filter.q)}" aria-label="Mods suchen">
+        <label class="chip"><input type="checkbox" id="fit" ${filter.onlyFit ? 'checked' : ''}> nur für ${i.version}</label></div>
+      <div class="chips">${CATS.map((c) => `<button class="chip" data-cat="${c}" aria-pressed="${filter.cat === c}">${c}</button>`).join('')}</div>
+      ${cards ? `<div class="grid">${cards}</div>` : '<div class="empty">Keine Mods gefunden.</div>'}`;
+  }
+
+  function viewMulti(i) {
+    return `<h1>Mehrspieler</h1><p class="sub">Zusammen in einer geteilten Welt spielen – mit den gleichen Mods.</p>
+      <div class="note"><b>So geht's in Eaglercraft:</b> Welt öffnen → Pause → <i>Open to LAN / Shared World</i> → den Code an Freunde schicken. Die joinen über Mehrspieler → <i>Join Shared World</i>.</div>
+      <div class="card"><b>Deine Instanz teilen</b><p>Schick diesen Link zusammen mit dem Welt-Code. Wer andere Mods hat, bekommt beim Öffnen die Frage, ob eine neue Instanz mit allen Mods deiner Welt erstellt werden soll.</p>
+        <div class="copy"><input type="text" id="share" readonly value="${esc(shareLink(i))}" aria-label="Einladungslink"><button class="btn primary" id="copy">Kopieren</button></div>
+        ${i.mods.some((m) => m.custom) ? '<p style="color:var(--bad)">Eigene .js-Mods werden nicht mitgeschickt.</p>' : ''}</div>`;
+  }
+
+  function viewSettings() {
+    const s = state.settings;
+    return `<h1>Einstellungen</h1><p class="sub">Hier verbindest du das Dashboard mit deinem EaglerForge-Client.</p>
+      <div class="note warn">Das Dashboard liefert selbst kein Minecraft aus. Du lädst einmal <b>deinen eigenen</b> EaglerForge-Client hoch; er bleibt nur in deinem Browser.</div>
+      <div class="card"><b>EaglerForge-Client (empfohlen)</b>
+        <p>${s.clientStored ? '✓ Gespeichert: ' + esc(s.clientName || 'processed.html') + ' (' + kb(s.clientSize || 0) + ')' : 'Noch kein Client hochgeladen.'}</p>
+        <ol class="steps"><li><a href="${DOWNLOADS}" target="_blank" rel="noopener">EaglercraftX 1.8 Offline-Download</a> holen</li>
+          <li>Im <a href="${INJECTOR}" target="_blank" rel="noopener">EaglerForge Injector</a> zu <code>processed.html</code> machen (<a href="${VIDEO}" target="_blank" rel="noopener">Video</a>)</li>
+          <li>Hier hochladen:</li></ol>
+        <div class="row"><label class="btn primary" for="client-file">processed.html hochladen</label><input type="file" id="client-file" accept=".html,.htm" hidden>
+          ${s.clientStored ? '<button class="btn danger" id="client-del">Entfernen</button>' : ''}</div></div>
+      <div class="card" style="margin-top:12px"><b>Oder: Link zu einem gehosteten EaglerForge-Client</b>
+        <p>Die Mods werden als <code>?mod=…</code> an den Link gehängt.</p>
+        <div class="field"><label for="client-url">Adresse</label><input type="url" id="client-url" placeholder="https://…/processed.html" value="${esc(s.clientUrl || '')}"></div></div>
+      <div class="card" style="margin-top:12px"><b>Daten</b><p>Instanzen und Mods liegen nur in diesem Browser.</p>
+        <div class="row"><button class="btn danger" id="wipe">Alles zurücksetzen</button></div></div>`;
+  }
+
+  function renderMain() {
+    const i = cur();
+    const main = $('#main');
+    if (!i) { main.innerHTML = '<div class="empty">Erstelle zuerst eine Instanz.</div>'; return; }
+    main.innerHTML = tab === 'mods' ? viewMods(i) : tab === 'discover' ? viewDiscover(i) : tab === 'multi' ? viewMulti(i) : viewSettings();
+    main.querySelectorAll('[data-go]').forEach((b) => b.addEventListener('click', () => setTab(b.dataset.go)));
+    main.querySelectorAll('[data-install]').forEach((b) => b.addEventListener('click', () => install(b.dataset.install)));
+    main.querySelectorAll('[data-rm]').forEach((b) => b.addEventListener('click', () => removeMod(b.dataset.rm)));
+    main.querySelectorAll('[data-save]').forEach((b) => b.addEventListener('click', () => saveFile(b.dataset.save)));
+    main.querySelectorAll('[data-cat]').forEach((b) => b.addEventListener('click', () => { filter.cat = b.dataset.cat; renderMain(); }));
+    const q = $('#q', main);
+    if (q) q.addEventListener('input', () => { filter.q = q.value; const pos = q.selectionStart; renderMain(); const n = $('#q'); n.focus(); n.setSelectionRange(pos, pos); });
+    const fit = $('#fit', main);
+    if (fit) fit.addEventListener('change', () => { filter.onlyFit = fit.checked; renderMain(); });
+    const cf = $('#custom-file', main);
+    if (cf) cf.addEventListener('change', () => { if (cf.files[0]) addCustom(cf.files[0]); });
+    const ex = $('#export', main);
+    if (ex) ex.addEventListener('click', exportZip);
+    const cp = $('#copy', main);
+    if (cp) cp.addEventListener('click', async () => {
+      const inp = $('#share');
+      try { await navigator.clipboard.writeText(inp.value); toast('Link kopiert'); } catch (e) { inp.select(); toast('Link markiert – mit Strg+C kopieren'); }
+    });
+    const clf = $('#client-file', main);
+    if (clf) clf.addEventListener('change', async () => {
+      const f = clf.files[0];
+      if (!f) return;
+      const html = await f.text();
+      if (!/eagler/i.test(html)) toast('Hinweis: Die Datei sieht nicht nach Eaglercraft aus', true);
+      if (!/ModAPI|PluginAPI|EaglerForge/i.test(html)) toast('Hinweis: Kein EaglerForge gefunden – erst durch den Injector schicken', true);
+      try {
+        await idbPut('client', html);
+        Object.assign(state.settings, { clientStored: true, clientName: f.name, clientSize: f.size });
+        save(); renderMain(); toast('EaglerForge-Client gespeichert');
+      } catch (e) { toast('Speichern nicht möglich (Browser-Speicher voll oder gesperrt)', true); }
+    });
+    const cd = $('#client-del', main);
+    if (cd) cd.addEventListener('click', async () => { await idbDel('client'); state.settings.clientStored = false; save(); renderMain(); });
+    const cu = $('#client-url', main);
+    if (cu) cu.addEventListener('change', () => { state.settings.clientUrl = cu.value.trim(); save(); toast('Adresse gespeichert'); });
+    const wipe = $('#wipe', main);
+    if (wipe) wipe.addEventListener('click', async () => {
+      const ok = await modal({ title: 'Alles zurücksetzen?', html: '<p>Alle Instanzen, Mods und der gespeicherte Client werden gelöscht.</p>',
+        actions: [{ label: 'Abbrechen', value: false }, { label: 'Zurücksetzen', kind: 'primary', value: true }] });
+      if (!ok) return;
+      try { localStorage.removeItem(STORE); indexedDB.deleteDatabase('efdash'); } catch (e) { /* ignorieren */ }
+      state = { instances: [], current: null, settings: {} };
+      render(); createInstanceDialog(true);
+    });
+  }
+
+  function render() { renderTop(); renderMain(); }
+
+  // ------------------------------------------------------------------ Start
+  document.querySelectorAll('nav.side button').forEach((b) => b.addEventListener('click', () => setTab(b.dataset.tab)));
+  $('#inst-btn').addEventListener('click', (e) => { e.stopPropagation(); togglePop(); });
+  document.addEventListener('click', (e) => { if (!$('#inst-pop').hidden && !e.target.closest('#inst-pop')) togglePop(false); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('#inst-pop').hidden) togglePop(false); });
+  $('#play').addEventListener('click', play);
+
+  (async function start() {
+    render();
+    try {
+      const r = await fetch('dashboard/eaglerforge-mods.json');
+      catalog = (await r.json()).mods;
+    } catch (e) {
+      toast('Mod-Katalog konnte nicht geladen werden', true);
+    }
+    render();
+    const joined = await handleJoin();
+    if (!joined && !state.instances.length) createInstanceDialog(true);
+  })();
+})();
+</script>
+</body>
+</html>

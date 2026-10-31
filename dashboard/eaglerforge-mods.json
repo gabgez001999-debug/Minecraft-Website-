@@ -1,0 +1,526 @@
+{
+ "source": "https://github.com/EaglerForge/EaglerForgeInjector",
+ "commit": "cee455d7ecad5f88e2a7c6dd9905d56835059e21",
+ "license": "MIT (c) 2024 Eagler Forge",
+ "mods": [
+  {
+   "id": "asyncsink",
+   "file": "AsyncSink.js",
+   "title": "AsyncSink",
+   "description": "Bibliothek: lässt Mods eigene Texturen, Sounds und Übersetzungen ins Spiel laden.",
+   "author": "ZXMushroom63",
+   "category": "Bibliothek",
+   "dependencies": [],
+   "versions": [
+    "1.8.8",
+    "1.12.2"
+   ],
+   "size": 22343,
+   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/AsyncSink.js"
+  },
+  {
+   "id": "libcustomitems",
+   "file": "lib.customitems.js",
+   "title": "LibCustomItems",
+   "description": "Bibliothek: macht eigene Items für andere Mods einfach.",
+   "author": "ZXMushroom63",
+   "category": "Bibliothek",
+   "dependencies": [],
+   "versions": [
+    "1.8.8"
+   ],
+   "size": 11167,
+   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/lib.customitems.js"
+  },
+  {
+   "id": "worldedit",
+   "file": "Worldedit.js",
+   "title": "WorldEdit",
+   "description": "Bauen im großen Stil: //wand, //set und //walls im Einzelspieler.",
+   "author": "radmanplays",
+   "category": "Werkzeug",
+   "dependencies": [
+    "libcustomitems"
+   ],
+   "versions": [
+    "1.8.8"
+   ],
+   "size": 13020,
+   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/Worldedit.js"
+  },
+  {
+   "id": "veinminer",
+   "file": "veinminer.js",
+   "title": "Vein Miner",
+   "description": "Baut beim Schleichen ganze Bäume und Erzadern auf einmal ab.",
+   "author": "ZXMushroom63",
+   "category": "Werkzeug",
+   "dependencies": [],
+   "versions": [
+    "1.8.8"
+   ],
+   "size": 6916,
+   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/veinminer.js"
+  },
+  {
+   "id": "waypoints",
+   "file": "waypoints.js",
+   "title": "Waypoints",
+   "description": "/setwp <name> speichert einen Wegpunkt, /wp <name> bringt dich hin.",
+   "author": "blizz828, Block_2222 & ZXMushroom63",
+   "category": "Werkzeug",
+   "dependencies": [],
+   "versions": [
+    "1.8.8"
+   ],
+   "size": 6783,
+   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/waypoints.js"
+  },
+  {
+   "id": "hats",
+   "file": "hats.js",
+   "title": "SimpleHats",
+   "description": "/hat setzt dir das Item aus deiner Hand auf den Kopf.",
+   "author": "ZXMushroom63",
+   "category": "Befehle",
+   "dependencies": [],
+   "versions": [
+    "1.8.8"
+   ],
+   "size": 1966,
+   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/hats.js"
+  },
+  {
+   "id": "grapplehook",
+   "file": "grapplehook.js",
+   "title": "Enterhaken",
+   "description": "Die Angel wird zum Enterhaken und zieht dich zum Haken.",
+   "author": "ZXMushroom63",
+   "category": "Spaß",
+   "dependencies": [],
+   "versions": [
+    "1.8.8"
+   ],
+   "size": 2554,
+   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/grapplehook.js"
+  },
+  {
+   "id": "guns",
+   "file": "guns.js",
+   "title": "Guns",
+   "description": "Fügt Pistolen hinzu.",
+   "author": "ZXMushroom63",
+   "category": "Inhalt",
+   "dependencies": [
+    "asyncsink"
+   ],
+   "versions": [
+    "1.8.8"
+   ],
+   "size": 6540,
+   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/guns.js"
+  },
+  {
+   "id": "guns_craftable",
+   "file": "guns_craftable.js",
+   "title": "Guns (craftbar)",
+   "description": "Pistolen mit eigenem Crafting-Rezept.",
+   "author": "ZXMushroom63",
+   "category": "Inhalt",
+   "dependencies": [
+    "asyncsink"
+   ],
+   "versions": [
+    "1.8.8"
+   ],
+   "size": 8485,
+   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/guns_craftable.js"
+  },
+  {
+   "id": "duck",
+   "file": "DuckMod.js",
+   "title": "Duck Mod",
+   "description": "Fügt Enten mit eigenem Modell und Quak-Geräusch hinzu.",
+   "author": "ZXMushroom63",
+   "category": "Inhalt",
+   "dependencies": [
+    "asyncsink"
+   ],
+   "versions": [
+    "1.8.8"
+   ],
+   "size": 26857,
+   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/DuckMod.js"
+  },
+  {
+   "id": "wine",
+   "file": "winemod.js",
+   "title": "Wine Mod",
+   "description": "Fügt Wein hinzu.",
+   "author": "radmanplays",
+   "category": "Inhalt",
+   "dependencies": [
+    "asyncsink"
+   ],
+   "versions": [
+    "1.8.8"
+   ],
+   "size": 67673,
+   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/winemod.js"
+  },
+  {
+   "id": "unlucky_blocks",
+   "file": "unlucky_blocks.js",
+   "title": "Unlucky Blocks",
+   "description": "Lila Blöcke mit bösen Überraschungen beim Abbauen.",
+   "author": "ZXMushroom63",
+   "category": "Inhalt",
+   "dependencies": [
+    "asyncsink"
+   ],
+   "versions": [
+    "1.8.8"
+   ],
+   "size": 6952,
+   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/unlucky_blocks.js"
+  },
+  {
+   "id": "block_of_steve",
+   "file": "block_of_steve_simple.js",
+   "title": "Block of Steve",
+   "description": "Ein Block mit Steve-Gesicht (Demo für eigene Blöcke).",
+   "author": "ZXMushroom63",
+   "category": "Inhalt",
+   "dependencies": [
+    "asyncsink"
+   ],
+   "versions": [
+    "1.8.8"
+   ],
+   "size": 6184,
+   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/block_of_steve_simple.js"
+  },
+  {
+   "id": "custom_block",
+   "file": "Tutorial_Custom_Block.js",
+   "title": "Explosiver Block",
+   "description": "Ein eigener Block, der explodiert, wenn man ihn benutzt.",
+   "author": "EaglerForge",
+   "category": "Inhalt",
+   "dependencies": [
+    "asyncsink"
+   ],
+   "versions": [
+    "1.8.8"
+   ],
+   "size": 21461,
+   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/Tutorial_Custom_Block.js"
+  },
+  {
+   "id": "custom_item",
+   "file": "Tutorial_Custom_Item.js",
+   "title": "Eigenes Item (Demo)",
+   "description": "Beispiel für ein komplett eigenes Item.",
+   "author": "EaglerForge",
+   "category": "Inhalt",
+   "dependencies": [
+    "asyncsink"
+   ],
+   "versions": [
+    "1.8.8"
+   ],
+   "size": 4866,
+   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/Tutorial_Custom_Item.js"
+  },
+  {
+   "id": "useless_item",
+   "file": "useless_item_example_mod.js",
+   "title": "Item-Demo",
+   "description": "Fügt ein nutzloses, aber hübsches Item hinzu.",
+   "author": "EaglerForge",
+   "category": "Inhalt",
+   "dependencies": [
+    "asyncsink"
+   ],
+   "versions": [
+    "1.8.8"
+   ],
+   "size": 3429,
+   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/useless_item_example_mod.js"
+  },
+  {
+   "id": "custom_items_demo",
+   "file": "CustomItemsDemo.js",
+   "title": "LibCustomItems-Demo",
+   "description": "Zeigt, wie Mods LibCustomItems benutzen.",
+   "author": "ZXMushroom63",
+   "category": "Inhalt",
+   "dependencies": [
+    "libcustomitems"
+   ],
+   "versions": [
+    "1.8.8"
+   ],
+   "size": 1515,
+   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/CustomItemsDemo.js"
+  },
+  {
+   "id": "diamond_recipe",
+   "file": "diamondBlockCustomCraft.js",
+   "title": "Diamant-Rezept",
+   "description": "Diamantblöcke aus Erde craften.",
+   "author": "EaglerForge",
+   "category": "Inhalt",
+   "dependencies": [],
+   "versions": [
+    "1.8.8"
+   ],
+   "size": 2190,
+   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/diamondBlockCustomCraft.js"
+  },
+  {
+   "id": "flammable_string",
+   "file": "flammable_string.js",
+   "title": "Brennbare Fäden",
+   "description": "Faden brennt im Ofen als Brennstoff.",
+   "author": "EaglerForge",
+   "category": "Inhalt",
+   "dependencies": [],
+   "versions": [
+    "1.8.8"
+   ],
+   "size": 427,
+   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/flammable_string.js"
+  },
+  {
+   "id": "timescale",
+   "file": "timescale_command.js",
+   "title": "Timescale",
+   "description": "/timescale 0.5 macht das Spiel halb so schnell.",
+   "author": "ZXMushroom63",
+   "category": "Befehle",
+   "dependencies": [],
+   "versions": [
+    "1.8.8"
+   ],
+   "size": 3860,
+   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/timescale_command.js"
+  },
+  {
+   "id": "faster_minecarts",
+   "file": "faster_minecarts.js",
+   "title": "Faster Minecarts",
+   "description": "/minecart_speed <faktor> macht Loren schneller.",
+   "author": "ZXMushroom63",
+   "category": "Befehle",
+   "dependencies": [],
+   "versions": [
+    "1.8.8"
+   ],
+   "size": 1000,
+   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/faster_minecarts.js"
+  },
+  {
+   "id": "xpspawner",
+   "file": "xpspawner.js",
+   "title": "/spawnxp",
+   "description": "Befehl, der Erfahrungskugeln erzeugt.",
+   "author": "EaglerForge",
+   "category": "Befehle",
+   "dependencies": [],
+   "versions": [
+    "1.8.8"
+   ],
+   "size": 1729,
+   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/xpspawner.js"
+  },
+  {
+   "id": "talkback",
+   "file": "talkback.js",
+   "title": "/talkback",
+   "description": "Der Server antwortet dir mit deiner eigenen Nachricht.",
+   "author": "EaglerForge",
+   "category": "Befehle",
+   "dependencies": [],
+   "versions": [
+    "1.8.8"
+   ],
+   "size": 722,
+   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/talkback.js"
+  },
+  {
+   "id": "servermod",
+   "file": "servermod.js",
+   "title": "Server Manager",
+   "description": "Werkzeuge für den Host einer geteilten Welt.",
+   "author": "ZXMushroom63 & radmanplays",
+   "category": "Werkzeug",
+   "dependencies": [],
+   "versions": [
+    "1.8.8"
+   ],
+   "size": 10398,
+   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/servermod.js"
+  },
+  {
+   "id": "slippery",
+   "file": "slippery.js",
+   "title": "Slippery",
+   "description": "Alle Blöcke werden rutschig wie Eis.",
+   "author": "radmanplays",
+   "category": "Spaß",
+   "dependencies": [],
+   "versions": [
+    "1.8.8"
+   ],
+   "size": 47214,
+   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/slippery.js"
+  },
+  {
+   "id": "afk",
+   "file": "afkmod.js",
+   "title": "Anti AFK",
+   "description": "Schreib .afk in den Chat, um dich automatisch zu bewegen.",
+   "author": "ZXMushroom63",
+   "category": "Werkzeug",
+   "dependencies": [],
+   "versions": [
+    "1.8.8"
+   ],
+   "size": 978,
+   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/afkmod.js"
+  },
+  {
+   "id": "vclip",
+   "file": "vclip.js",
+   "title": "VClip",
+   "description": "Mit .vclip <zahl> senkrecht durch Blöcke teleportieren.",
+   "author": "ZXMushroom63",
+   "category": "Trick",
+   "dependencies": [],
+   "versions": [
+    "1.8.8"
+   ],
+   "size": 1214,
+   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/vclip.js"
+  },
+  {
+   "id": "microphone",
+   "file": "microphone.js",
+   "title": "GET A MIC",
+   "description": "Spaß-Mod mit einem Mikrofon-Item.",
+   "author": "ZXMushroom63 & TheIdiotPlays",
+   "category": "Spaß",
+   "dependencies": [
+    "asyncsink"
+   ],
+   "versions": [
+    "1.8.8"
+   ],
+   "size": 226080,
+   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/microphone.js"
+  },
+  {
+   "id": "no_particles",
+   "file": "no_particles.js",
+   "title": "Keine Partikel",
+   "description": "Schaltet alle Partikel ab – mehr FPS.",
+   "author": "EaglerForge",
+   "category": "Grafik",
+   "dependencies": [],
+   "versions": [
+    "1.8.8"
+   ],
+   "size": 545,
+   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/no_particles.js"
+  },
+  {
+   "id": "no_block_particles",
+   "file": "no_block_particles.js",
+   "title": "Keine Block-Partikel",
+   "description": "Keine Splitter mehr beim Abbauen.",
+   "author": "EaglerForge",
+   "category": "Grafik",
+   "dependencies": [],
+   "versions": [
+    "1.8.8"
+   ],
+   "size": 332,
+   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/no_block_particles.js"
+  },
+  {
+   "id": "sliders",
+   "file": "sliders.js",
+   "title": "Sliders",
+   "description": "Entfernt die Grenzen der Schieberegler in den Optionen.",
+   "author": "ZXMushroom63",
+   "category": "Grafik",
+   "dependencies": [],
+   "versions": [
+    "1.8.8"
+   ],
+   "size": 2757,
+   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/sliders.js"
+  },
+  {
+   "id": "f11fix",
+   "file": "f11fix.js",
+   "title": "Fullscreen Fixer",
+   "description": "Mod-Menüs bleiben auch im Vollbild sichtbar.",
+   "author": "ZXMushroom63",
+   "category": "Grafik",
+   "dependencies": [],
+   "versions": [
+    "1.8.8"
+   ],
+   "size": 463,
+   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/f11fix.js"
+  },
+  {
+   "id": "diamond_recipe_112",
+   "file": "diamondBlockCustomCraft_112.js",
+   "title": "Diamant-Rezept (1.12)",
+   "description": "Diamantblöcke aus Erde craften.",
+   "author": "EaglerForge",
+   "category": "Inhalt",
+   "dependencies": [],
+   "versions": [
+    "1.12.2"
+   ],
+   "size": 1496,
+   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/diamondBlockCustomCraft_112.js"
+  },
+  {
+   "id": "useless_item_112",
+   "file": "useless_item_example_mod_112.js",
+   "title": "Item-Demo (1.12)",
+   "description": "Fügt ein nutzloses, aber hübsches Item hinzu.",
+   "author": "EaglerForge",
+   "category": "Inhalt",
+   "dependencies": [
+    "asyncsink"
+   ],
+   "versions": [
+    "1.12.2"
+   ],
+   "size": 3252,
+   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/useless_item_example_mod_112.js"
+  },
+  {
+   "id": "custom_block_112",
+   "file": "custom_block_112.js",
+   "title": "Eigener Block (1.12)",
+   "description": "Beispiel für einen eigenen Block.",
+   "author": "EaglerForge",
+   "category": "Inhalt",
+   "dependencies": [
+    "asyncsink"
+   ],
+   "versions": [
+    "1.12.2"
+   ],
+   "size": 6280,
+   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/custom_block_112.js"
+  }
+ ]
+}

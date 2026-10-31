@@ -9,6 +9,21 @@ Zwei inoffizielle Mods für den **Eaglercraft-26.3-Client** mit seinem eingebaut
 | **Ressourcenpaket** | [`dist/create_zeus_resources.zip`](dist/create_zeus_resources.zip) | 35 eigene 3D-Modelle im Create-Stil ([Vorschau](vorschau.html)) – oder per Konverter die Original-Modelle aus deiner eigenen Create-Jar |
 | **MC-Device (Eaglercraft-Port)** | [`dist/mc_device_zeus.zip`](dist/mc_device_zeus.zip) | Handy mit GPS/Wegpunkten, Uhr/Wecker, Wetter, Rechner, Notizen, Musik, Status, Taschenlampe, Staubsauger, Laptop für Create-Anlagen |
 
+## Mod-Loader-Dashboard (EaglerForge)
+
+[`dashboard.html`](dashboard.html) ist ein Launcher im Browser für **EaglerForge** (JavaScript-Mods für Eaglercraft 1.8.8 / 1.12.2):
+
+- Beim ersten Start eine Instanz anlegen (Name, Version, Loader). Oben rechts siehst und wechselst du Instanz, Loader und Version.
+- **Mods entdecken:** 35 echte Mods aus den offiziellen EaglerForge-Beispielmods (MIT). Braucht eine Mod andere
+  (z. B. WorldEdit → LibCustomItems, Guns → AsyncSink), fragt ein Popup, ob die mit heruntergeladen werden sollen.
+- **Spielen** (unten rechts) öffnet deinen EaglerForge-Client mit den Mods der Instanz in einem neuen Tab. Dafür einmal unter
+  Einstellungen die `processed.html` aus dem [EaglerForge Injector](https://eaglerforge.github.io/EaglerForgeInjector/) hochladen
+  (bleibt nur im Browser) oder die Adresse eines gehosteten EaglerForge-Clients eintragen.
+- **Mehrspieler:** Einladungslink teilen. Wer andere Mods hat, bekommt beim Öffnen die Frage, ob eine Instanz mit allen Mods der Welt erstellt werden soll.
+
+Der Katalog [`dashboard/eaglerforge-mods.json`](dashboard/eaglerforge-mods.json) entsteht mit
+`python tools/build_ef_catalog.py <klon-von-EaglerForgeInjector>` und zeigt auf einen festen Commit.
+
 ## Installation
 
 1. [eaglercraft.com/play?version=26.3](https://eaglercraft.com/play?version=26.3) öffnen.
@@ -52,6 +67,7 @@ python tools/build.py       # baut dist/*.zip, dist/*.lua und das Ressourcenpake
 - [Create](https://github.com/Creators-of-Create/Create) von simibubi & dem Create-Team. Code MIT,
   Assets „All Rights Reserved“. Hier werden keine Create-Assets verwendet.
 - [Phone: MC-Device](https://www.curseforge.com/minecraft/mc-mods/phone-mc-device) von NotPumpkins. Nur die Idee, kein Code.
+- [EaglerForge](https://github.com/EaglerForge/EaglerForgeInjector): Mod-Loader und Beispiel-Mods (MIT), im Dashboard direkt von dort geladen.
 - [Eaglercraft](https://eaglercraft.com). Kein offizielles Produkt von Mojang/Microsoft.
 
 Lizenz der Mods in diesem Repo: MIT (siehe [`LICENSE`](LICENSE)).
