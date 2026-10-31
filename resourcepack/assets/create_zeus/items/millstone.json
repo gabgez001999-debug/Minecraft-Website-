@@ -1,0 +1,15 @@
+{
+ "model": {
+  "type": "minecraft:composite",
+  "models": [
+   {
+    "type": "minecraft:model",
+    "model": "create_zeus:block/d_mill_b"
+   },
+   {
+    "type": "minecraft:model",
+    "model": "create_zeus:block/d_mill_i"
+   }
+  ]
+ }
+}

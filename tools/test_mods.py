@@ -154,6 +154,126 @@ def test_create():
 
 
 # ---------------------------------------------------------------------------
+def test_create_menu_addons():
+    print("Create-Port: Menü, Items, Addons")
+    lua = runtime("create_zeus")
+    M = lua.globals().M
+    M.fire("world_join")
+    M.ticks(2)
+
+    # B-Menü baut sich schrittweise auf
+    M.binds["menu"].onPress()
+    check(M.screenText().count("\n") <= 1, "Menü startet leer (Einblend-Animation)")
+    M.ticks(12)
+    txt = M.screenText()
+    check("Welle" in txt and "Bestätigen" in txt and "Entdecken" in txt, "Bauteile-Tab und Tabs unten sichtbar")
+    before = len(sent(lua))
+    M.click("Zahnrad")
+    M.ticks(1)
+    new = sent(lua)[before:]
+    check(any('give @s minecraft:nautilus_shell[minecraft:item_model="create_zeus:cogwheel",minecraft:item_name="Zahnrad"] 64' == c for c in new),
+          "Klick auf Zahnrad gibt das Item mit 3D-Modell")
+
+    # Addon mit Abhängigkeit installieren
+    M.click("Entdecken")
+    M.ticks(10)
+    M.click("Create: Aeronautik")
+    M.ticks(10)
+    check("Create: Elektrik ✖" in M.screenText(), "Detailansicht zeigt fehlende Abhängigkeit")
+    M.click("Installieren (mit Create: Elektrik)")
+    M.ticks(10)
+    check("%" in M.screenText() and "█" in M.screenText(), "Fortschrittsbalken im Menü")
+    hudtxt = M.renderHud()
+    M.ticks(150)
+    toasts = lua_list(M.toasts)
+    check(any("Create: Elektrik installiert" == t for t in toasts) and any("Create: Aeronautik installiert" == t for t in toasts),
+          "beide Addons installiert, Meldung oben rechts (Toast)")
+    M.click("Zurück")
+    M.ticks(10)
+    M.click("Bestätigen")
+    M.ticks(12)
+    txt = M.screenText()
+    check("Create: Elektrik   ✔ AKTIVIERT" in txt and "Create: Aeronautik   ✔ AKTIVIERT" in txt, "Bestätigen-Tab listet installierte Addons als aktiv")
+    M.click("Create: Elektrik")
+    txt = M.screenText()
+    check("Create: Elektrik   ✖ DEAKTIVIERT" in txt and "Create: Aeronautik   ✖ DEAKTIVIERT" in txt,
+          "Deaktivieren schaltet abhängiges Addon mit aus")
+    M.click("Create: Aeronautik")
+    check("Create: Aeronautik   ✔ AKTIVIERT" in M.screenText() and "Create: Elektrik   ✔ AKTIVIERT" in M.screenText(),
+          "Aktivieren schaltet die Abhängigkeit wieder an")
+    M.click("Abhängigkeiten")
+    M.ticks(10)
+    check("Create: Aeronautik  →  Create (Port) ✔, Create: Elektrik ✔" in M.screenText(), "Abhängigkeiten-Tab")
+    M.click("Schließen")
+
+    # Rechtsklick mit Item in der Hand setzt das Teil
+    lua.execute('M.held = { id = "minecraft:breeze_rod", name = "Welle", count = 64 }')
+    hit(lua, 4, 70, 4, "east")
+    e = M.rightClick()
+    M.ticks(1)
+    check(e.cancelled, "Rechtsklick wird abgefangen (kein Vanilla-Effekt)")
+    cmds = sent(lua)
+    check(any(c.startswith("setblock 5 70 4 minecraft:barrier keep") for c in cmds), "Welle per Rechtsklick gesetzt (Barriere als Träger)")
+    check(any('item_model:"create_zeus:d_shaft"' in c and c.startswith("summon item_display 5.5 70.5 4.5") for c in cmds),
+          "3D-Modell der Welle als item_display")
+    # Schraubenschlüssel: Schleichen + Rechtsklick hebt auf
+    M.ticks(6)
+    lua.execute('M.held = "minecraft:rabbit_foot"; M.sneaking = true')
+    hit(lua, 5, 70, 4, "up")
+    M.rightClick()
+    M.ticks(1)
+    cmds = sent(lua)
+    check(any(c.startswith("setblock 5 70 4 air") for c in cmds) and any(c.startswith("give @s minecraft:breeze_rod") and c.endswith(" 1") for c in cmds),
+          "Schraubenschlüssel + Schleichen hebt die Welle auf")
+    lua.execute('M.sneaking = false; M.held = nil')
+
+    # Elektrik: Kreativmotor -> Lichtmaschine erzeugt Strom; Elektromotor springt an
+    hit(lua, 39, 90, 0, "east")
+    M.runCommand("create", "setzen", "motor")           # (40,90,0) Achse x
+    hit(lua, 40, 90, 0, "east")
+    M.runCommand("create", "setzen", "lichtmaschine")   # (41,90,0)
+    hit(lua, 49, 90, 0, "east")
+    M.runCommand("create", "setzen", "elektromotor")    # (50,90,0)
+    hit(lua, 50, 90, 0, "east")
+    M.runCommand("create", "setzen", "welle")           # (51,90,0)
+    M.ticks(60)
+    out = hud_at(lua, 51, 90, 0)
+    check("128 RPM" in out, "Elektromotor läuft mit Strom aus der Lichtmaschine (128 RPM)")
+    out = hud_at(lua, 41, 90, 0)
+    check("Strom:" in out, "Ingenieursbrille zeigt Strom (FE)")
+
+    # Kanone feuert TNT (Addon erst installieren)
+    hit(lua, 60, 90, 0, "east")
+    M.runCommand("create", "setzen", "kanone")
+    M.ticks(1)
+    check(any("Addon nicht aktiv" in c for c in lua_list(M.chatlog)), "Kanone ohne installiertes Addon wird abgelehnt")
+    M.binds["menu"].onPress()
+    M.ticks(10)
+    M.click("Entdecken")
+    M.ticks(10)
+    M.click("Create: Kanonen")
+    M.ticks(10)
+    M.click("Installieren")
+    M.ticks(120)
+    check("Deinstallieren" in M.screenText(), "Detailansicht aktualisiert sich nach der Installation")
+    M.click("Zurück")
+    M.ticks(10)
+    M.click("Schließen")
+    lua.execute('M.px, M.py, M.pz = 58, 90, 3')
+    lua.execute('M.facing = "north"')
+    hit(lua, 60, 90, 0, "east")
+    M.runCommand("create", "setzen", "motor")           # (61,90,0) Achse x
+    lua.execute('M.facing = "east"')
+    hit(lua, 61, 90, 0, "east")
+    M.runCommand("create", "setzen", "kanone")          # (62,90,0) facing east, Rückseite west
+    before = len(sent(lua))
+    M.ticks(120)
+    check(any(c.startswith("summon tnt 63.80 90.50 0.50 {fuse:80") for c in sent(lua)[before:]), "Kanone feuert TNT nach Osten")
+    errs = [l for l in lua_list(M.logs) if "fehlgeschlagen" in l]
+    check(not errs, "keine API-Fehler im Log " + (str(errs[:2]) if errs else ""))
+
+
+# ---------------------------------------------------------------------------
 def test_device():
     print("MC-Device-Port")
     lua = runtime("mc_device_zeus")
@@ -196,6 +316,7 @@ def test_device():
 
 if __name__ == "__main__":
     test_create()
+    test_create_menu_addons()
     test_device()
     print()
     if failures:

@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Eaglercraft 26.3 Lua-Mods</title>
+<title>Create für Eaglercraft</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<meta name="description" content="Create und MC-Device als Lua-Mods für Eaglercraft 26.3 (Zeus-Mod-System). Download, Installation und Steuerung.">
+<meta name="description" content="Create-Port für Eaglercraft 26.3 (Zeus-Lua): drehende 3D-Modelle, Bauteile im Inventar, Addon-Menü, Konverter für die Original-Create-Modelle.">
 <link rel="icon" href="mods/create_zeus/icon.png">
 <style>
   :root {
@@ -87,6 +87,16 @@
   footer { padding: 34px 0 48px; color: var(--muted); font-size: 14px; border-top: 1px solid var(--line); margin-top: 20px; }
   footer ul { padding-left: 18px; }
   .su { font-variant-numeric: tabular-nums; color: var(--brass2); white-space: nowrap; }
+  .conv { display: grid; gap: 12px; }
+  .conv input[type=file] { width: 100%; padding: 14px; border: 2px dashed var(--line); border-radius: 12px; background: var(--panel2); color: var(--text); }
+  .conv input[type=file]:focus-visible { outline: 2px solid var(--brass2); }
+  .progress { height: 10px; border-radius: 6px; background: var(--panel2); border: 1px solid var(--line); overflow: hidden; }
+  .progress > div { height: 100%; width: 0; background: linear-gradient(90deg, var(--brass), var(--brass2)); transition: width .2s; }
+  #conv-status { min-height: 1.6em; color: var(--muted); font-size: 14px; }
+  #conv-download[hidden] { display: none; }
+  .tabs-demo { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+  .tabs-demo span { font-size: 13px; padding: 4px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel2); }
+  .tabs-demo span.on { border-color: var(--brass); color: var(--brass2); }
 </style>
 </head>
 <body>
@@ -94,19 +104,19 @@
   <header>
     <div class="eyebrow">
       <span class="chip brass">Eaglercraft 26.3</span>
-      <span class="chip">Zeus-Mod-System · Lua 5.4 · API 1</span>
-      <span class="chip">Inoffiziell</span>
+      <span class="chip">Zeus-Lua · API 1</span>
+      <span class="chip">v0.2 · inoffiziell</span>
     </div>
-    <h1>Create &amp; MC-Device<br><span>als Lua-Mods für Eaglercraft</span></h1>
-    <p class="lead">Zwei Mods für den Eaglercraft-26.3-Client im Browser: ein Create-Port mit drehenden Wellen,
-      Zahnrädern und Maschinen samt Stress-System, und ein Handy nach der Idee von MC-Device.
-      Herunterladen, im Mods-Menü importieren, losbauen.</p>
+    <h1>Create<br><span>für Eaglercraft 26.3</span></h1>
+    <p class="lead">Wellen, Zahnräder, Motoren und Maschinen mit drehenden 3D-Modellen, Teile im Inventar zum Setzen per Rechtsklick,
+      Stress-System wie im Original und ein B-Menü mit installierbaren Addons. Dazu das Handy aus dem MC-Device-Port.</p>
     <nav class="jump">
       <a class="btn primary" href="#download">Download</a>
       <a class="btn" href="#install">Installation</a>
-      <a class="btn" href="#create">Create-Steuerung</a>
-      <a class="btn" href="#handy">Handy-Steuerung</a>
-      <a class="btn" href="#grenzen">Wichtig zu wissen</a>
+      <a class="btn" href="vorschau.html">3D-Vorschau</a>
+      <a class="btn" href="#original">Original-Create-Modelle</a>
+      <a class="btn" href="#steuerung">Steuerung</a>
+      <a class="btn" href="#addons">Addons</a>
     </nav>
   </header>
 
@@ -118,18 +128,34 @@
           <img src="mods/create_zeus/icon.png" alt="" width="64" height="64">
           <div>
             <h3>Create (Eaglercraft-Port)</h3>
-            <div class="meta">create_zeus · v0.1.0 · Einzelspieler mit Cheats</div>
+            <div class="meta">create_zeus · v0.2.0 · Mod für das Mods-Menü</div>
           </div>
         </div>
         <ul class="feat">
-          <li>Wellen, Zahnräder (2:1-Übersetzung), Getriebe</li>
-          <li>Handkurbel, Wasserrad, Kreativmotor (1–256 RPM)</li>
-          <li>Bohrer, Lüfter (Schmelzen, Waschen, Verfluchen), Presse, Mahlstein, Förderband</li>
-          <li>Stress-System mit Überlastung, Tacho, Stressometer, Ingenieursbrille im HUD</li>
+          <li>18 Bauteile plus Schraubenschlüssel, alle als Items im Inventar</li>
+          <li>Drehende 3D-Modelle, Zahnräder greifen sichtbar ineinander</li>
+          <li>B-Menü: Bauteile, Addons entdecken, Abhängigkeiten, Bestätigen</li>
+          <li>Drehzahl, Übersetzung, Stress und Überlastung wie in Create</li>
         </ul>
         <div class="dl">
           <a class="btn primary" href="dist/create_zeus.zip" download>create_zeus.zip</a>
-          <a class="btn" href="dist/create_zeus.lua" download>.lua-Einzeldatei</a>
+        </div>
+      </article>
+      <article class="card">
+        <div class="mod-head">
+          <img src="resourcepack/pack.png" alt="" width="64" height="64">
+          <div>
+            <h3>Ressourcenpaket</h3>
+            <div class="meta">create_zeus_resources · 21 Modelle · nötig für die 3D-Modelle</div>
+          </div>
+        </div>
+        <ul class="feat">
+          <li>Eigene Modelle und Texturen im Create-Stil</li>
+          <li>Oder: unten deine eigene Create-Jar umwandeln und die <strong>Original-Modelle</strong> nutzen</li>
+          <li><a href="vorschau.html">Alle Modelle in 3D ansehen</a></li>
+        </ul>
+        <div class="dl">
+          <a class="btn primary" href="dist/create_zeus_resources.zip" download>create_zeus_resources.zip</a>
         </div>
       </article>
       <article class="card">
@@ -137,18 +163,15 @@
           <img src="mods/mc_device_zeus/icon.png" alt="" width="64" height="64">
           <div>
             <h3>MC-Device (Eaglercraft-Port)</h3>
-            <div class="meta">mc_device_zeus · v0.1.0 · Einzelspieler</div>
+            <div class="meta">mc_device_zeus · v0.1.0 · optional</div>
           </div>
         </div>
         <ul class="feat">
-          <li>Handy mit GPS, Wegpunkten und Navigation im HUD</li>
-          <li>Uhr und Wecker, Wetter und Zeit, Rechner, Notizen, Musik, Status</li>
-          <li>Taschenlampe (Nachtsicht) und Staubsauger (zieht Items heran)</li>
-          <li>Laptop zeigt deine Create-Anlagen, wenn beide Mods installiert sind</li>
+          <li>Handy mit GPS, Wegpunkten, Uhr, Wetter, Rechner, Notizen, Musik</li>
+          <li>Taschenlampe, Staubsauger, Laptop zeigt deine Create-Netze</li>
         </ul>
         <div class="dl">
           <a class="btn primary" href="dist/mc_device_zeus.zip" download>mc_device_zeus.zip</a>
-          <a class="btn" href="dist/mc_device_zeus.lua" download>.lua-Einzeldatei</a>
         </div>
       </article>
     </div>
@@ -157,76 +180,90 @@
   <section id="install">
     <h2>Installation</h2>
     <ol class="steps">
-      <li>Öffne <a href="https://eaglercraft.com/play?version=26.3" rel="noopener">Eaglercraft 26.3</a> im Browser.</li>
-      <li>Erstelle eine <strong>Einzelspieler-Welt mit „Cheats erlauben“</strong>. Die Mods setzen Blöcke und Display-Entities per Befehl.</li>
-      <li>Hauptmenü → <strong>Mods</strong> → <strong>Importieren</strong> → die <code>.zip</code> auswählen.
-        Du kannst die Datei auch direkt auf das Mods-Fenster ziehen.</li>
-      <li>Welt betreten. <kbd>B</kbd> öffnet das Create-Baumenü, <kbd>P</kbd> das Handy.
-        Alle Tasten lassen sich unter Optionen → Steuerung ändern.</li>
+      <li>Öffne <a href="https://eaglercraft.com/play?version=26.3" rel="noopener">Eaglercraft 26.3</a>.</li>
+      <li><strong>Ressourcenpaket</strong> einbinden: Optionen → Ressourcenpakete → <code>create_zeus_resources.zip</code> (oder dein umgewandeltes Original-Paket) hinzufügen und nach rechts in „Ausgewählt“ schieben.</li>
+      <li><strong>Mod</strong> einbinden: Hauptmenü → Mods → Importieren → <code>create_zeus.zip</code>.</li>
+      <li>Einzelspieler-Welt <strong>mit Cheats</strong> erstellen und betreten.</li>
+      <li><kbd>B</kbd> drücken → Tab <strong>Bauteile</strong> → „Alle Teile geben“. Teil in die Hand nehmen, auf einen Block zielen, <strong>Rechtsklick</strong>.</li>
     </ol>
   </section>
 
-  <section id="create">
-    <h2>Create: Steuerung &amp; Bauteile</h2>
+  <section id="original">
+    <h2>Original-Create-Modelle</h2>
+    <p class="lead" style="font-size:16px">Die Create-Texturen und -Modelle sind „All Rights Reserved“ und dürfen nicht mitgeliefert werden.
+      Wenn du die Create-Jar hast (z. B. <code>create-1.21.1-6.0.10.jar</code> von Modrinth oder CurseForge), baut dir diese Seite daraus ein Ressourcenpaket
+      mit den echten Modellen. Alles passiert <strong>nur in deinem Browser</strong>, nichts wird hochgeladen.</p>
+    <div class="card conv">
+      <label for="conv-file"><strong>Create-Jar auswählen</strong></label>
+      <input id="conv-file" type="file" accept=".jar,.zip">
+      <div class="progress" aria-hidden="true"><div id="conv-bar"></div></div>
+      <div id="conv-status" role="status">Getestet mit Create 6.0.10: 29 von 30 Modellen werden die Originale, nur das Wasserrad bleibt aus dem Port-Paket.</div>
+      <div><a id="conv-download" class="btn primary" hidden download="create_zeus_original_modelle.zip">Paket herunterladen</a></div>
+    </div>
+  </section>
+
+  <section id="steuerung">
+    <h2>Steuerung</h2>
     <div class="two">
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Taste</th><th>Aktion</th></tr></thead>
+          <thead><tr><th>Eingabe</th><th>Aktion</th></tr></thead>
           <tbody>
-            <tr><td><kbd>B</kbd></td><td>Baumenü: Bauteil auswählen</td></tr>
-            <tr><td><kbd>R</kbd></td><td>Bauteil an die angeschaute Blockseite setzen</td></tr>
-            <tr><td><kbd>V</kbd></td><td>Schraubenschlüssel: drehen, Motor einstellen, Wasserrad umkehren</td></tr>
-            <tr><td><kbd>X</kbd></td><td>Angeschautes Bauteil abbauen</td></tr>
-            <tr><td><kbd>G</kbd> halten</td><td>Handkurbel drehen (schleichen = rückwärts)</td></tr>
+            <tr><td><kbd>B</kbd></td><td>Create-Menü öffnen</td></tr>
+            <tr><td>Rechtsklick mit Teil</td><td>Teil an die angeschaute Blockseite setzen</td></tr>
+            <tr><td>Rechtsklick mit Schraubenschlüssel</td><td>Teil drehen, Motor einstellen</td></tr>
+            <tr><td>Schleichen + Rechtsklick (Schlüssel)</td><td>Teil aufheben, es kommt zurück ins Inventar</td></tr>
+            <tr><td>Rechte Maustaste halten / <kbd>G</kbd></td><td>Handkurbel drehen (schleichen = rückwärts)</td></tr>
+            <tr><td><kbd>R</kbd> · <kbd>V</kbd> · <kbd>X</kbd></td><td>Setzen, Schraubenschlüssel, Abbauen per Taste</td></tr>
           </tbody>
         </table>
       </div>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>Befehl</th><th>Wirkung</th></tr></thead>
-          <tbody>
-            <tr><td><code>/create hilfe</code></td><td>Übersicht</td></tr>
-            <tr><td><code>/create setzen &lt;teil&gt;</code></td><td>z. B. <code>welle</code>, <code>zahnrad</code>, <code>gross</code>, <code>motor</code>, <code>bohrer</code></td></tr>
-            <tr><td><code>/create motor &lt;rpm&gt;</code></td><td>Motor einstellen (negativ = rückwärts)</td></tr>
-            <tr><td><code>/create netz</code> · <code>liste</code></td><td>Netz-Infos, alle Bauteile</td></tr>
-            <tr><td><code>/create zurücksetzen</code></td><td>Alles abbauen</td></tr>
-            <tr><td><code>/create api</code></td><td>Diagnose: schreibt die Lua-API ins Mod-Log</td></tr>
-          </tbody>
-        </table>
+      <div class="card">
+        <h3>Das B-Menü</h3>
+        <p class="meta" style="font-size:15px">Baut sich beim Öffnen Schritt für Schritt auf. Unten wechselst du die Tabs:</p>
+        <div class="tabs-demo"><span class="on">Bauteile</span><span>Entdecken</span><span>Abhängigkeiten</span><span>Bestätigen</span></div>
+        <ul class="feat">
+          <li><strong>Bauteile:</strong> anklicken = ins Inventar, wie im Kreativmodus</li>
+          <li><strong>Entdecken:</strong> Addons anklicken → Installieren. Oben läuft ein Balken mit Prozent, danach kommt oben rechts eine Meldung.</li>
+          <li><strong>Abhängigkeiten:</strong> was jedes Addon braucht (✔ / ✖)</li>
+          <li><strong>Bestätigen:</strong> alle installierten Mods, Klick schaltet an oder aus</li>
+        </ul>
       </div>
     </div>
-    <div class="table-wrap" style="margin-top:16px">
+  </section>
+
+  <section id="addons">
+    <h2>Addons</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Addon</th><th>Inhalt</th><th>Braucht</th></tr></thead>
+        <tbody>
+          <tr><td>Create: Kanonen</td><td>Kanonenrohr feuert mit Rotation TNT, je schneller desto öfter (inspiriert von Create Big Cannons)</td><td>Create</td></tr>
+          <tr><td>Create: Elektrik</td><td>Lichtmaschine macht Strom (FE), Elektromotor macht daraus Rotation (inspiriert von Crafts &amp; Additions)</td><td>Create</td></tr>
+          <tr><td>Create: Aeronautik</td><td>Propeller-Lager hebt dich und alles darüber in die Luft (inspiriert von Create Aeronautics)</td><td>Create, Create: Elektrik</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="teile">
+    <h2>Bauteile</h2>
+    <div class="table-wrap">
       <table>
         <thead><tr><th>Bauteil</th><th>Funktion</th><th>Stress</th></tr></thead>
         <tbody>
           <tr><td>Welle</td><td>Leitet Drehung entlang ihrer Achse weiter</td><td class="su">–</td></tr>
           <tr><td>Zahnrad / Großes Zahnrad</td><td>Kleine nebeneinander drehen gegenläufig; groß ↔ klein diagonal = 2:1</td><td class="su">–</td></tr>
           <tr><td>Getriebe</td><td>Lenkt Drehung auf die vier Seiten um</td><td class="su">–</td></tr>
-          <tr><td>Handkurbel</td><td>32 RPM, solange du <kbd>G</kbd> hältst</td><td class="su">+256 SU</td></tr>
+          <tr><td>Handkurbel</td><td>32 RPM, solange du kurbelst</td><td class="su">+256 SU</td></tr>
           <tr><td>Wasserrad</td><td>Dauerhaft 8 RPM</td><td class="su">+256 SU</td></tr>
           <tr><td>Kreativmotor</td><td>1–256 RPM einstellbar</td><td class="su">+16384 SU</td></tr>
-          <tr><td>Mechanischer Bohrer</td><td>Baut den Block vor sich ab (Antrieb von hinten)</td><td class="su">4 SU/RPM</td></tr>
-          <tr><td>Lüfter</td><td>Bläst Items und Mobs; vor Lava/Feuer schmelzen, vor Wasser waschen, vor Seelenfeuer verfluchen</td><td class="su">2 SU/RPM</td></tr>
-          <tr><td>Mechanische Presse</td><td>Presst Items unter sich (z. B. Zuckerrohr → Papier, Eis → Packeis)</td><td class="su">8 SU/RPM</td></tr>
+          <tr><td>Mechanischer Bohrer</td><td>Baut den Block vor sich ab</td><td class="su">4 SU/RPM</td></tr>
+          <tr><td>Lüfter</td><td>Bläst; vor Lava/Feuer schmelzen, vor Wasser waschen, vor Seelenfeuer verfluchen</td><td class="su">2 SU/RPM</td></tr>
+          <tr><td>Mechanische Presse</td><td>Presst Items unter sich (Zuckerrohr → Papier, Eis → Packeis)</td><td class="su">8 SU/RPM</td></tr>
           <tr><td>Mahlstein</td><td>Mahlt Items auf sich (Bruchstein → Kies → Sand, Blumen → Farbstoff)</td><td class="su">4 SU/RPM</td></tr>
-          <tr><td>Förderband</td><td>Transportiert Items, Mobs und dich; braucht ein drehendes Bauteil daneben</td><td class="su">–</td></tr>
+          <tr><td>Förderband</td><td>Transportiert Items, Mobs und dich</td><td class="su">–</td></tr>
           <tr><td>Tacho / Stressometer</td><td>Zeigen Drehzahl bzw. Stress als schwebenden Text</td><td class="su">–</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </section>
-
-  <section id="handy">
-    <h2>Handy: Steuerung</h2>
-    <div class="table-wrap">
-      <table>
-        <thead><tr><th>Taste / Befehl</th><th>Aktion</th></tr></thead>
-        <tbody>
-          <tr><td><kbd>P</kbd> · <code>/handy</code></td><td>Handy öffnen</td></tr>
-          <tr><td><kbd>J</kbd></td><td>Staubsauger an/aus</td></tr>
-          <tr><td><code>/wegpunkt &lt;name&gt;</code></td><td>Aktuelle Position als Wegpunkt speichern</td></tr>
-          <tr><td><code>/notiz &lt;text&gt;</code></td><td>Notiz ins Handy schreiben</td></tr>
-          <tr><td><code>/rechne 64*3+5</code></td><td>Rechner im Chat</td></tr>
         </tbody>
       </table>
     </div>
@@ -234,27 +271,109 @@
 
   <section id="grenzen">
     <h2>Wichtig zu wissen</h2>
-    <p class="note"><strong>Nur Einzelspieler.</strong> Der 26.3-Client pausiert alle Mods auf Servern und sobald eine Welt fürs LAN geöffnet ist.
-      Deshalb kann das Handy keine Anrufe zwischen Spielern führen, das Herzstück des Original-MC-Device.</p>
-    <p class="note"><strong>Cheats müssen an sein.</strong> Zeus-Mods können keine eigenen Blöcke registrieren.
-      Jedes Create-Bauteil ist ein Vanilla-Trägerblock plus Display-Entities, gesetzt und animiert über <code>/setblock</code>,
-      <code>/summon</code> und <code>/data</code>.</p>
-    <p class="note info"><strong>Die Lua-API ist nicht offiziell dokumentiert.</strong> Diese Mods nutzen die Funktionen, die im Client stecken,
-      und sind gegen einen nachgebauten Client getestet, aber nicht im echten Spiel. Wenn etwas nicht reagiert:
-      in den Mod-Einstellungen „Befehle mit / senden“ umschalten oder <code>/create api</code> ausführen und das Mod-Log ansehen.</p>
+    <p class="note"><strong>Kein eigener Tab im Kreativinventar (E).</strong> Zeus-Lua-Mods können keine Items registrieren.
+      Die Teile holst du über das B-Menü (Tab Bauteile) oder <code>/create kit</code>. Im Inventar sehen sie dank Ressourcenpaket wie Create-Teile aus.</p>
+    <p class="note"><strong>Nur Einzelspieler mit Cheats.</strong> Der Client pausiert Mods auf Servern und in LAN-Welten. Die Teile werden per Befehl gesetzt
+      (Barriere-Block als Träger plus drehende Display-Entities).</p>
+    <p class="note info"><strong>Die Lua-API ist nicht offiziell dokumentiert.</strong> Die Mods sind gegen einen nachgebauten Client getestet, nicht im echten Spiel.
+      Wenn etwas nicht reagiert: <code>/create api</code> ausführen und das Mod-Log ansehen, oder in den Mod-Einstellungen „Befehle mit / senden“ umschalten.</p>
   </section>
 
   <footer>
     <strong>Credits &amp; Quellen</strong>
     <ul>
-      <li><a href="https://eaglercraft.com" rel="noopener">Eaglercraft</a>: Minecraft im Browser; 26.3-Client mit Zeus-Mod-System.</li>
-      <li><a href="https://github.com/Creators-of-Create/Create" rel="noopener">Create</a> von simibubi &amp; dem Create-Team:
-        Code unter MIT, Assets „All Rights Reserved“. Dieser Port übernimmt keine Assets, nur die Spielmechanik.</li>
-      <li><a href="https://www.curseforge.com/minecraft/mc-mods/phone-mc-device" rel="noopener">Phone: MC-Device</a> von NotPumpkins:
-        nur die Idee übernommen, kein Code.</li>
+      <li><a href="https://eaglercraft.com" rel="noopener">Eaglercraft</a>: 26.3-Client mit Zeus-Mod-System.</li>
+      <li><a href="https://github.com/Creators-of-Create/Create" rel="noopener">Create</a> von simibubi &amp; dem Create-Team: Code MIT, Assets „All Rights Reserved“.
+        Dieser Port liefert keine Create-Assets mit; der Konverter liest sie nur lokal aus deiner eigenen Jar.</li>
+      <li><a href="https://www.curseforge.com/minecraft/mc-mods/phone-mc-device" rel="noopener">Phone: MC-Device</a> von NotPumpkins: nur die Idee, kein Code.</li>
+      <li>Addons inspiriert von Create Big Cannons, Create Crafts &amp; Additions und Create Aeronautics; eigene Umsetzung.</li>
       <li>Kein offizielles Produkt von Mojang, Microsoft, Eaglercraft oder den Mod-Autoren.</li>
     </ul>
   </footer>
 </div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>
+// Konverter: Create-Jar (lokal) -> Ressourcenpaket mit Original-Modellen. Gleiche Logik wie tools/convert_create.py
+(function () {
+  const input = document.getElementById('conv-file');
+  const status = document.getElementById('conv-status');
+  const barEl = document.getElementById('conv-bar');
+  const link = document.getElementById('conv-download');
+  const say = (t, p) => { status.textContent = t; if (p != null) barEl.style.width = Math.round(p) + '%'; };
+
+  async function chainOk(jar, path) {
+    const seen = new Set();
+    let cur = path;
+    while (cur && !seen.has(cur)) {
+      seen.add(cur);
+      const f = jar.file('assets/create/models/' + cur + '.json');
+      if (!f) return 'fehlt: ' + cur;
+      const data = JSON.parse(await f.async('string'));
+      if (data.loader) return 'eigener Loader in ' + cur;
+      const parent = data.parent;
+      if (!parent || !parent.startsWith('create:')) return null;
+      cur = parent.slice(7);
+    }
+    return null;
+  }
+  function itemDef(paths) {
+    const models = paths.map((p) => ({ type: 'minecraft:model', model: 'create:' + p }));
+    return models.length === 1 ? { model: models[0] } : { model: { type: 'minecraft:composite', models } };
+  }
+
+  input.addEventListener('change', async () => {
+    const file = input.files && input.files[0];
+    if (!file) return;
+    link.hidden = true;
+    try {
+      say('Lese ' + file.name + ' …', 3);
+      const [map, baseBuf, jar] = await Promise.all([
+        fetch('converter/create_mapping.json').then((r) => r.json()),
+        fetch('dist/create_zeus_resources.zip').then((r) => r.arrayBuffer()),
+        JSZip.loadAsync(file),
+      ]);
+      if (!jar.file('assets/create/models/block/shaft.json')) throw new Error('Das ist keine Create-Jar (assets/create fehlt).');
+      const base = await JSZip.loadAsync(baseBuf);
+      const out = new JSZip();
+      const replaced = {};
+      const ok = [], fallback = [];
+      for (const section of ['display', 'items']) {
+        for (const [id, paths] of Object.entries(map[section])) {
+          let problem = null;
+          for (const p of paths) { problem = await chainOk(jar, p); if (problem) break; }
+          if (problem) fallback.push(id + ' (' + problem + ')');
+          else { replaced['assets/create_zeus/items/' + id + '.json'] = JSON.stringify(itemDef(paths), null, 1); ok.push(id); }
+        }
+      }
+      say('Übernehme Create-Modelle und -Texturen …', 10);
+      for (const [name, f] of Object.entries(base.files)) {
+        if (f.dir || replaced[name]) continue;
+        if (name === 'pack.mcmeta') {
+          const meta = JSON.parse(await f.async('string'));
+          meta.pack.description = 'Create-Port – Original-Create-Modelle (nur für dich, nicht weitergeben)';
+          out.file(name, JSON.stringify(meta, null, 1));
+        } else out.file(name, await f.async('uint8array'));
+      }
+      const names = Object.keys(jar.files).filter((n) => !jar.files[n].dir &&
+        (n.startsWith('assets/create/models/') || n.startsWith('assets/create/textures/')));
+      for (let i = 0; i < names.length; i++) {
+        out.file(names[i], await jar.file(names[i]).async('uint8array'));
+        if (i % 200 === 0) say('Übernehme Dateien … ' + i + ' / ' + names.length, 10 + 60 * i / names.length);
+      }
+      for (const [name, text] of Object.entries(replaced)) out.file(name, text);
+      const blob = await out.generateAsync({ type: 'blob', compression: 'DEFLATE' },
+        (m) => say('Packe Ressourcenpaket … ' + Math.round(m.percent) + '%', 70 + m.percent * 0.3));
+      if (link.href) URL.revokeObjectURL(link.href);
+      link.href = URL.createObjectURL(blob);
+      link.hidden = false;
+      say('Fertig: ' + ok.length + ' Original-Modelle' + (fallback.length ? ', aus dem Port-Paket: ' + fallback.map((f) => f.split(' ')[0]).join(', ') : '') +
+        '. Das Paket ist nur für dich – bitte nicht weitergeben.', 100);
+    } catch (e) {
+      say('Fehler: ' + e.message, 0);
+    }
+  });
+})();
+</script>
 </body>
 </html>

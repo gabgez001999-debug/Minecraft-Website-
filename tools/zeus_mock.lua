@@ -49,6 +49,7 @@ player = {
   velocity = function() return M.vx, M.vy, M.vz end,
   setVelocity = function(x, y, z) M.vx, M.vy, M.vz = x, y, z end,
   lookingAt = function() return M.hit end,
+  heldItem = function() return M.held end,
   dimension = function() return "minecraft:overworld" end,
   biome = function() return "minecraft:plains" end,
   health = function() return 18 end, maxHealth = function() return 20 end,
@@ -59,7 +60,7 @@ player = {
 
 game = {
   fps = function() return 60 end,
-  screen = function() return M.screen end,
+  screen = function() if M.current and not M.current.closed then return "zeus_screen" end return M.screen end,
   server = function() return nil end,
   isSingleplayer = function() return true end,
   inWorld = function() return true end,
@@ -76,7 +77,16 @@ keys = {
   bind = function(spec) M.binds[spec.id] = spec end,
   isDown = function(k) return M.down[k] == true end,
 }
-mouse = { isDown = function() return false end }
+mouse = { isDown = function(b) return M.mouseDown[b] == true end }
+M.mouseDown = {}
+
+-- Rechtsklick in der Welt: Event mit cancel()
+function M.rightClick()
+  local e = { button = "right", cancelled = false }
+  function e:cancel() self.cancelled = true end
+  M.fire("mouse_click", e)
+  return e
+end
 
 hud = {
   add = function(id, fn)

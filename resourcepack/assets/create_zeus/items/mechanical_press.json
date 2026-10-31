@@ -1,0 +1,15 @@
+{
+ "model": {
+  "type": "minecraft:composite",
+  "models": [
+   {
+    "type": "minecraft:model",
+    "model": "create_zeus:block/d_press_c"
+   },
+   {
+    "type": "minecraft:model",
+    "model": "create_zeus:block/d_press_h"
+   }
+  ]
+ }
+}

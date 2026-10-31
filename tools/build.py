@@ -1,6 +1,6 @@
 """Baut die Zeus-Mod-Pakete.
 
-Für jede Mod in mods/<id>/ entsteht:
+Für jede Mod in mods/<id>/ entsteht (plus dist/create_zeus_resources.zip, das Ressourcenpaket):
   dist/<id>.zip   metadata.json + icon.png + main.lua (Import im Mods-Menü)
   dist/<id>.lua   Einzeldatei-Variante (Kopfkommentare -- name/id/version reichen dem Client)
 
@@ -14,6 +14,8 @@ import shutil
 import zipfile
 
 from PIL import Image, ImageDraw
+
+import build_pack
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 MODS = ROOT / "mods"
@@ -76,5 +78,17 @@ def build():
         print(f"{out.relative_to(ROOT)}  ({out.stat().st_size} Bytes)")
 
 
+def build_resourcepack():
+    build_pack.build()
+    out = DIST / "create_zeus_resources.zip"
+    src = ROOT / "resourcepack"
+    with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as z:
+        for f in sorted(src.rglob("*")):
+            if f.is_file():
+                z.write(f, f.relative_to(src).as_posix())
+    print(f"{out.relative_to(ROOT)}  ({out.stat().st_size} Bytes)")
+
+
 if __name__ == "__main__":
     build()
+    build_resourcepack()

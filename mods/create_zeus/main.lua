@@ -1,6 +1,6 @@
 -- name: Create (Eaglercraft-Port)
 -- id: create_zeus
--- version: 0.1.0
+-- version: 0.2.0
 -- author: Larpbase
 -- description: Inoffizieller Create-Port für Eaglercraft 26.3 (Zeus-Lua). Wellen, Zahnräder, Motoren, Bohrer, Lüfter, Presse, Mahlstein, Förderband und Stress-System.
 --
@@ -11,7 +11,7 @@
 --   * Das Kinetik-Netz (Drehzahl, Drehrichtung, Übersetzung, Stress) rechnet diese Mod in Lua,
 --     angelehnt an Create (Code MIT, (c) simibubi & Create-Team). Es werden keine Create-Assets genutzt.
 
-local MOD_VERSION = "0.1.0"
+local MOD_VERSION = "0.2.0"
 
 ---------------------------------------------------------------------------
 -- Kompatibilität: Zeus-Bibliotheken defensiv ansprechen
@@ -88,7 +88,7 @@ end
 ---------------------------------------------------------------------------
 -- Einstellungen
 ---------------------------------------------------------------------------
-local defaults = { goggles = true, quiet = true, animate = true, slash = false, budget = 24 }
+local defaults = { goggles = true, quiet = true, animate = true, slash = false, budget = 24, models = true }
 local function setting(name)
   local v = field(settings, name)
   if v == nil then return defaults[name] end
@@ -96,6 +96,7 @@ local function setting(name)
 end
 if settings then
   pcall(function()
+    settings.toggle("models", { label = "3D-Modelle (Ressourcenpaket nötig)", default = true })
     settings.toggle("goggles", { label = "Ingenieursbrille (HUD)", default = true })
     settings.toggle("animate", { label = "Drehende Teile animieren", default = true })
     settings.toggle("quiet", { label = "Befehlsausgaben ausblenden", default = true })
@@ -261,6 +262,15 @@ local BASE = {
   x = qaxis(0, 0, 1, -90),
   z = qaxis(1, 0, 0, 90),
 }
+-- Basis für gerichtete Modelle: lokales +Y (Spitze von Bohrkopf/Propeller) -> Blickrichtung
+local BASE_FACING = {
+  up = { 0, 0, 0, 1 },
+  down = qaxis(1, 0, 0, 180),
+  east = qaxis(0, 0, 1, -90),
+  west = qaxis(0, 0, 1, 90),
+  south = qaxis(1, 0, 0, 90),
+  north = qaxis(1, 0, 0, -90),
+}
 
 local function f3(v)
   local s = string.format("%.3f", v)
@@ -337,9 +347,102 @@ local TYPES = {
     parts = { { item = "polished_andesite", s = { 0.22, 1.3, 0.22 } } } },
   stressometer = { name = "Stressometer", axial = true, gauge = "stress", carrier = "polished_andesite",
     parts = { { item = "polished_andesite", s = { 0.22, 1.3, 0.22 } } } },
+  -- Addon "Create: Kanonen"
+  cannon = { name = "Kanonenrohr", addon = "kanonen", directional = true, carrier = "polished_blackstone", impact = 8,
+    parts = { { item = "black_concrete", s = { 0.5, 1.2, 0.5 }, off = 0.45 } } },
+  -- Addon "Create: Elektrik"
+  alternator = { name = "Lichtmaschine", addon = "elektrik", axial = true, carrier = "copper_block", impact = 8,
+    parts = { { item = "polished_andesite", s = { 0.22, 1.3, 0.22 } } } },
+  electric_motor = { name = "Elektromotor", addon = "elektrik", axial = true, carrier = "waxed_copper_block",
+    source = { rpm = 128, cap = 16, electric = true },
+    parts = { { item = "polished_andesite", s = { 0.22, 1.5, 0.22 } } } },
+  -- Addon "Create: Aeronautik"
+  propeller_bearing = { name = "Propeller-Lager", addon = "aeronautik", directional = true, carrier = "polished_andesite", impact = 6,
+    parts = {
+      { item = "white_wool", s = { 2.6, 0.08, 0.4 }, off = 0.6 },
+      { item = "white_wool", s = { 0.4, 0.08, 2.6 }, off = 0.6 },
+    } },
 }
 local TYPE_ORDER = { "shaft", "cog", "large_cog", "gearbox", "crank", "water_wheel", "motor",
-  "drill", "fan", "press", "millstone", "belt", "speedometer", "stressometer" }
+  "drill", "fan", "press", "millstone", "belt", "speedometer", "stressometer",
+  "cannon", "alternator", "electric_motor", "propeller_bearing" }
+
+-- 3D-Modelle aus dem Ressourcenpaket (assets/create_zeus/items/<name>.json).
+-- Gleiche Ausrichtung wie die Original-Create-Modelle, damit beide Pakete passen:
+--   Wellen/Zahnräder: Achse Y · Bohrkopf/Propeller: Achse Z (fix dreht Z nach Y) · Gehäuse: Vorderseite oben
+local FIX_Z = qaxis(1, 0, 0, -90)
+local MODELS = {
+  shaft = { spin = "d_shaft" },
+  cog = { spin = "d_cog", teeth = 8 },
+  large_cog = { spin = "d_lcog", teeth = 16 },
+  gearbox = { static = "d_gearbox" },
+  crank = { spin = "d_crank", useFacing = true },
+  water_wheel = { spin = "d_wheel" },
+  motor = { static = "d_cmotor", staticAxis = true, useFacing = true, spin = "d_shaft" },
+  drill = { static = "d_drill_c", staticFacing = true, spin = "d_drill_h", fix = FIX_Z },
+  fan = { static = "d_fan_c", staticFacing = true, spin = "d_prop", fix = FIX_Z },
+  press = { static = "d_press_c", spin = "d_shaft", head = "d_press_h" },
+  millstone = { static = "d_mill_b", spin = "d_mill_i" },
+  belt = {},
+  speedometer = { static = "d_speedo", spin = "d_shaft" },
+  stressometer = { static = "d_stresso", spin = "d_shaft" },
+  cannon = { static = "d_cannon", staticFacing = true },
+  alternator = { static = "d_alt", staticAxis = true, spin = "d_shaft" },
+  electric_motor = { static = "d_emotor", staticAxis = true, spin = "d_shaft" },
+  propeller_bearing = { static = "d_bearing", staticFacing = true, spin = "d_bprop", off = 0.6 },
+}
+
+-- Inventar-Items: eindeutiges Vanilla-Grunditem ohne Rechtsklick-Funktion + eigenes Modell
+local KIT = {
+  { "shaft", "breeze_rod", "create_zeus:shaft", 64 },
+  { "cog", "nautilus_shell", "create_zeus:cogwheel", 64 },
+  { "large_cog", "heart_of_the_sea", "create_zeus:large_cogwheel", 16 },
+  { "gearbox", "shulker_shell", "create_zeus:gearbox", 16 },
+  { "crank", "rabbit_hide", "create_zeus:hand_crank", 4 },
+  { "water_wheel", "prismarine_crystals", "create_zeus:water_wheel", 8 },
+  { "motor", "popped_chorus_fruit", "create_zeus:creative_motor", 8 },
+  { "drill", "prismarine_shard", "create_zeus:mechanical_drill", 8 },
+  { "fan", "phantom_membrane", "create_zeus:encased_fan", 8 },
+  { "press", "armadillo_scute", "create_zeus:mechanical_press", 8 },
+  { "millstone", "turtle_scute", "create_zeus:millstone", 8 },
+  { "belt", "disc_fragment_5", "minecraft:black_carpet", 64 },
+  { "speedometer", "echo_shard", "create_zeus:speedometer", 4 },
+  { "stressometer", "firework_star", "create_zeus:stressometer", 4 },
+  { "cannon", "ghast_tear", "create_zeus:cannon", 4 },
+  { "alternator", "resin_brick", "create_zeus:alternator", 8 },
+  { "electric_motor", "amethyst_shard", "create_zeus:electric_motor", 8 },
+  { "propeller_bearing", "nether_star", "create_zeus:propeller_bearing", 4 },
+  { "wrench", "rabbit_foot", "create_zeus:wrench", 1 },
+}
+local PART_BY_ITEM, PART_BY_NAME = {}, {}
+for _, k in ipairs(KIT) do PART_BY_ITEM[k[2]] = k[1] end
+for name, T in pairs(TYPES) do PART_BY_NAME[T.name:lower()] = name end
+PART_BY_NAME["schraubenschlüssel"] = "wrench"
+
+-- Addons (Erweiterungen dieses Ports, inspiriert von bekannten Create-Addons)
+local ADDONS = {
+  { id = "kanonen", name = "Create: Kanonen", inspired = "Create Big Cannons", version = "1.0.0", size = 38,
+    desc = "Kanonenrohr: feuert mit Rotation TNT in Blickrichtung. Je schneller, desto öfter.",
+    deps = { "create" }, types = { "cannon" } },
+  { id = "elektrik", name = "Create: Elektrik", inspired = "Create Crafts & Additions", version = "1.0.0", size = 52,
+    desc = "Lichtmaschine macht aus Rotation Strom (FE), der Elektromotor macht daraus wieder Rotation.",
+    deps = { "create" }, types = { "alternator", "electric_motor" } },
+  { id = "aeronautik", name = "Create: Aeronautik", inspired = "Create Aeronautics", version = "1.0.0", size = 64,
+    desc = "Propeller-Lager: hebt dich und alles über dem Propeller in die Luft. Am besten mit Elektromotor.",
+    deps = { "create", "elektrik" }, types = { "propeller_bearing" } },
+}
+local ADDON_BY_ID = { create = { id = "create", name = "Create (Port)", version = MOD_VERSION, core = true } }
+for _, a in ipairs(ADDONS) do ADDON_BY_ID[a.id] = a end
+local addonState = { installed = {}, enabled = {} }
+
+local function addonOn(id)
+  if id == nil or id == "create" then return true end
+  return addonState.installed[id] == true and addonState.enabled[id] == true
+end
+local function typeOn(typeName)
+  local T = TYPES[typeName]
+  return T ~= nil and addonOn(T.addon)
+end
 
 -- Rezepte (nur Vanilla-Items)
 local MILL = {
@@ -383,6 +486,8 @@ local tickNo = 0
 local selected = "shaft"
 local crankHeld = false
 local active = false   -- in einer Welt
+local energy = 0       -- Strom (FE) aus Lichtmaschinen, für Elektromotoren
+local ENERGY_MAX = 200000
 
 local function worldName()
   for _, try in ipairs({
@@ -409,9 +514,9 @@ local function save()
   local list = {}
   for _, c in pairs(comps) do
     list[#list + 1] = { id = c.id, t = c.type, x = c.x, y = c.y, z = c.z, a = c.axis, f = c.facing,
-      rpm = c.rpm, rev = c.rev, d = c.dim }
+      rpm = c.rpm, rev = c.rev, d = c.dim, m = c.mode, ba = c.baseAngle }
   end
-  local data = json.encode({ v = 1, nextId = nextId, comps = list })
+  local data = json.encode({ v = 2, nextId = nextId, comps = list, energy = floor(energy) })
   if not call(storage, "set", storageKey(), data) then warnOnce("savefail", "Speichern fehlgeschlagen") end
   dirty = false
 end
@@ -429,10 +534,12 @@ local function loadState()
   end
   if type(data) ~= "table" then return end
   nextId = tonumber(data.nextId) or 1
+  energy = tonumber(data.energy) or 0
   for _, e in ipairs(data.comps or {}) do
     if TYPES[e.t] then
       local c = { id = e.id, type = e.t, x = e.x, y = e.y, z = e.z, axis = e.a, facing = e.f,
-        rpm = e.rpm, rev = e.rev, dim = e.d or "overworld", angle = 0, speed = 0, progress = 0 }
+        rpm = e.rpm, rev = e.rev, dim = e.d or "overworld", angle = e.ba or 0, baseAngle = e.ba, speed = 0, progress = 0,
+        mode = e.m or "parts" }
       comps[key3(c.x, c.y, c.z)] = c
       byId[c.id] = c
       if c.id >= nextId then nextId = c.id + 1 end
@@ -496,17 +603,60 @@ end
 
 local function carrierBlock(c)
   local T = TYPES[c.type]
+  if c.mode == "model" and not T.belt then return "minecraft:barrier" end
   local b = "minecraft:" .. T.carrier
   if T.carrierAxis then b = b .. "[axis=" .. axisOf(c) .. "]" end
   return b
 end
 
+local function baseQuat(c)
+  if TYPES[c.type].directional then return BASE_FACING[c.facing] end
+  if c.mode == "model" and MODELS[c.type].useFacing and c.facing and FACINGS[c.facing][4] == axisOf(c) then
+    return BASE_FACING[c.facing]
+  end
+  return BASE[axisOf(c)]
+end
+
 local function spinQuat(c)
-  local base = BASE[axisOf(c)]
-  return qmul(base, qaxis(0, 1, 0, c.angle or 0))
+  local q = qmul(baseQuat(c), qaxis(0, 1, 0, c.angle or 0))
+  local fix = c.mode == "model" and MODELS[c.type].fix
+  if fix then q = qmul(q, fix) end
+  return q
+end
+
+local function summonModel(c, modelId, tag, q, tr)
+  cmd(string.format(
+    'summon item_display %.1f %.1f %.1f {item:{id:"stick",components:{item_model:"create_zeus:%s"}},Tags:["cz","%s"],transformation:{left_rotation:%s,right_rotation:[0f,0f,0f,1f],translation:%s,scale:[1f,1f,1f]}}',
+    c.x + 0.5, c.y + 0.5, c.z + 0.5, modelId, tag, farr(q), farr(tr)))
+end
+
+local function summonModels(c)
+  local T, Mo = TYPES[c.type], MODELS[c.type]
+  if Mo.static then
+    local q = { 0, 0, 0, 1 }
+    if Mo.staticFacing then q = BASE_FACING[c.facing]
+    elseif Mo.useFacing and c.facing and FACINGS[c.facing][4] == axisOf(c) then q = BASE_FACING[c.facing]
+    elseif Mo.staticAxis then q = BASE[axisOf(c)] end
+    summonModel(c, Mo.static, "c" .. c.id .. "s", q, { 0, 0, 0 })
+  end
+  if Mo.spin then
+    local tr = { 0, 0, 0 }
+    if Mo.off and T.directional then
+      local f = FACINGS[c.facing]
+      tr = { f[1] * Mo.off, f[2] * Mo.off, f[3] * Mo.off }
+    end
+    summonModel(c, Mo.spin, "c" .. c.id, spinQuat(c), tr)
+  end
+  if Mo.head then summonModel(c, Mo.head, "c" .. c.id .. "h", { 0, 0, 0, 1 }, { 0, 0, 0 }) end
+  if T.gauge then
+    cmd(string.format(
+      'summon text_display %.1f %.2f %.1f {Tags:["cz","c%dt"],billboard:"center",text:{text:"...",color:"gold"},background:1610612736}',
+      c.x + 0.5, c.y + 1.25, c.z + 0.5, c.id))
+  end
 end
 
 local function summonParts(c)
+  if c.mode == "model" then return summonModels(c) end
   local T = TYPES[c.type]
   local q = spinQuat(c)
   local fx, fy, fz = 0, 0, 0
@@ -542,6 +692,7 @@ local function unbuildComponent(c, keepBlock)
   cmd(string.format("kill @e[tag=c%d]", c.id))
   if TYPES[c.type].gauge then cmd(string.format("kill @e[tag=c%dt]", c.id)) end
   if c.type == "press" then cmd(string.format("kill @e[tag=c%dh]", c.id)) end
+  if c.mode == "model" and MODELS[c.type].static then cmd(string.format("kill @e[tag=c%ds]", c.id)) end
   if not keepBlock then cmd(string.format("setblock %d %d %d air", c.x, c.y, c.z)) end
 end
 
@@ -573,12 +724,12 @@ end
 local function links(c)
   local out = {}
   local T = TYPES[c.type]
-  if T.belt then return out end
+  if T.belt or not typeOn(c.type) then return out end
   for _, face in ipairs(FACING_LIST) do
     if acceptsShaft(c, face) then
       local f = FACINGS[face]
       local n = at(c.x + f[1], c.y + f[2], c.z + f[3])
-      if n and not TYPES[n.type].belt and acceptsShaft(n, OPPOSITE[face]) then
+      if n and not TYPES[n.type].belt and typeOn(n.type) and acceptsShaft(n, OPPOSITE[face]) then
         local r = 1
         if T.gearbox then r = r * gearboxSign(c, face) end
         if TYPES[n.type].gearbox then r = r * gearboxSign(n, OPPOSITE[face]) end
@@ -612,8 +763,12 @@ end
 
 local function sourceSpeed(c)
   local T = TYPES[c.type]
-  if not T.source then return nil end
+  if not T.source or not typeOn(c.type) then return nil end
   local sign = c.rev and -1 or 1
+  if T.source.electric then
+    if not c.powered then return nil end
+    return (c.rpm or T.source.rpm) * sign
+  end
   if T.source.manual then
     if (c.crankUntil or -1) >= tickNo then return T.source.rpm * (c.crankDir or 1) end
     return nil
@@ -625,6 +780,7 @@ end
 local function sourceCapacity(c, speed)
   local T = TYPES[c.type]
   if T.source.creative then return 16384 end
+  if T.source.electric then return T.source.cap * abs(speed) end
   return T.source.cap * abs(speed)
 end
 
@@ -678,7 +834,7 @@ local function solve()
       local impact = 0
       for _, c in ipairs(members) do
         local imp = TYPES[c.type].impact
-        if imp then impact = impact + imp * abs(rel[c] * k) end
+        if imp and typeOn(c.type) then impact = impact + imp * abs(rel[c] * k) end
       end
       local over = impact > capacity + 1e-6 and k ~= 0
       local stopped = conflict or over
@@ -862,11 +1018,15 @@ end
 local function place(typeName, x, y, z, face)
   local T = TYPES[typeName]
   if not T then return false, "Unbekanntes Bauteil" end
+  if not typeOn(typeName) then return false, "Addon nicht aktiv: B-Menü → Bestätigen" end
   if at(x, y, z) then return false, "Da steht schon ein Bauteil" end
-  local c = { id = nextId, type = typeName, x = x, y = y, z = z, dim = dimension(), angle = 0, speed = 0, progress = 0, near = true }
+  local c = { id = nextId, type = typeName, x = x, y = y, z = z, dim = dimension(), angle = 0, speed = 0, progress = 0, near = true,
+    mode = setting("models") and "model" or "parts" }
   nextId = nextId + 1
   local look = lookFacing()
-  if T.directional then
+  if typeName == "propeller_bearing" then
+    c.facing = face or "up"
+  elseif T.directional then
     c.facing = look
   elseif T.belt then
     c.facing = horizontalFacing()
@@ -879,8 +1039,17 @@ local function place(typeName, x, y, z, face)
     c.axis = "y"
   else
     c.axis = face and FACINGS[face][4] or FACINGS[look][4]
+    if MODELS[typeName].useFacing then c.facing = face or look end
   end
-  if T.source and T.source.creative then c.rpm = T.source.rpm end
+  if T.source and (T.source.creative or T.source.electric) then c.rpm = T.source.rpm end
+  -- Zahnräder um einen halben Zahn versetzen, damit sie sichtbar ineinandergreifen (wie in Create)
+  local teeth = MODELS[typeName].teeth
+  if teeth and c.axis then
+    local p = PERP[c.axis]
+    local sum = ({ x = x, y = y, z = z })[p[1]] + ({ x = x, y = y, z = z })[p[2]]
+    c.angle = (sum % 2 == 1) and (180 / teeth) or 0
+    c.baseAngle = c.angle
+  end
   comps[key3(x, y, z)] = c
   byId[c.id] = c
   buildComponent(c)
@@ -1007,18 +1176,72 @@ local function processFan(c)
 end
 
 local function setPressHead(c, down)
-  local y = down and -0.75 or 0
+  local y = down and (c.mode == "model" and -0.9 or -0.75) or 0
   cmd(string.format(
     "data merge entity @e[tag=c%dh,limit=1] {start_interpolation:0,interpolation_duration:4,transformation:{translation:[0f,%s,0f]}}",
     c.id, f3(y)))
 end
 
+local function fireCannon(c)
+  local f = FACINGS[c.facing]
+  local x, y, z = c.x + 0.5 + f[1] * 1.3, c.y + 0.5 + f[2] * 1.3, c.z + 0.5 + f[3] * 1.3
+  local v = mmin(3.0, 1.0 + abs(c.speed) / 128)
+  local up = (f[2] == 0) and 0.15 or 0
+  cmd(string.format("summon tnt %.2f %.2f %.2f {fuse:80,Motion:[%.3fd,%.3fd,%.3fd]}", x, y, z, f[1] * v, f[2] * v + up, f[3] * v))
+  cmd(string.format("playsound minecraft:entity.generic.explode block @a %.1f %.1f %.1f 0.6 1.8", x, y, z))
+end
+
+local function liftPropeller(c)
+  local f = FACINGS[c.facing]
+  local range = mmax(3, mmin(16, floor(abs(c.speed) / 16 + 0.5)))
+  local v = mmin(0.6, abs(c.speed) / 256 * 0.5 + 0.12) * (c.speed > 0 and 1 or -1)
+  local x0, y0, z0, dx, dy, dz = fanBox(c, 1, range)
+  -- Säule 3x3 quer zur Blickrichtung
+  local wx, wy, wz = (f[1] == 0) and 1 or 0, (f[2] == 0) and 1 or 0, (f[3] == 0) and 1 or 0
+  x0, y0, z0 = mmin(x0, x0 + dx) - wx, mmin(y0, y0 + dy) - wy, mmin(z0, z0 + dz) - wz
+  dx, dy, dz = abs(dx) + 2 * wx, abs(dy) + 2 * wy, abs(dz) + 2 * wz
+  cmd(string.format(
+    "execute positioned %d %d %d as @e[tag=!cz,type=!player,dx=%d,dy=%d,dz=%d] run data merge entity @s {Motion:[%.3fd,%.3fd,%.3fd]}",
+    x0, y0, z0, dx, dy, dz, f[1] * v, f[2] * v, f[3] * v))
+  local ok, px, py, pz = call(player, "pos")
+  if ok and type(px) == "number" and px >= x0 and px <= x0 + dx + 1 and py >= y0 - 1 and py <= y0 + dy + 1 and pz >= z0 and pz <= z0 + dz + 1 then
+    local okv, vx, vy, vz = call(player, "velocity")
+    local okS, sneaking = call(player, "isSneaking")
+    if okv and type(vx) == "number" and not (okS and sneaking) then
+      if f[2] ~= 0 then call(player, "setVelocity", vx, f[2] * v, vz)
+      else call(player, "setVelocity", vx + f[1] * v * 0.3, vy, vz + f[3] * v * 0.3) end
+    end
+  end
+end
+
+-- Strom: Elektromotoren verbrauchen FE, gehen aus, wenn nichts mehr da ist
+local function updateEnergy()
+  for _, c in pairs(comps) do
+    if c.type == "electric_motor" and c.near and typeOn(c.type) then
+      local cost = abs(c.rpm or 128) * 4
+      if c.powered then
+        if energy >= cost then energy = energy - cost
+        else c.powered = false; solveNeeded = true end
+      elseif energy >= cost * 20 then
+        c.powered = true; solveNeeded = true
+      end
+    end
+  end
+end
+
 local function processMachines()
   for _, c in pairs(comps) do
     local T = TYPES[c.type]
-    if c.near and c.speed ~= 0 and (T.impact or T.belt) then
+    if c.near and c.speed ~= 0 and (T.impact or T.belt) and typeOn(c.type) then
       local s = abs(c.speed)
-      if c.type == "drill" then
+      if c.type == "cannon" then
+        c.progress = c.progress + s
+        if c.progress >= 4800 then c.progress = 0; fireCannon(c) end
+      elseif c.type == "alternator" then
+        energy = mmin(ENERGY_MAX, energy + s * 16)
+      elseif c.type == "propeller_bearing" then
+        if tickNo % 2 == 0 then liftPropeller(c) end
+      elseif c.type == "drill" then
         c.progress = c.progress + s
         if c.progress >= 1200 then c.progress = 0; processDrill(c) end
       elseif c.type == "fan" then
@@ -1037,7 +1260,7 @@ local function processMachines()
           c.progress = 0
           setPressHead(c, true)
           c.pressUp = tickNo + 6
-          convertItems(c.x + 0.5, c.y - 1.8, c.z + 0.5, 0.8, PRESS)
+          convertItems(c.x + 0.5, c.y - 0.8, c.z + 0.5, 0.8, PRESS)
         end
         if c.pressUp and tickNo >= c.pressUp then c.pressUp = nil; setPressHead(c, false) end
       end
@@ -1088,7 +1311,8 @@ local function animate()
   if not setting("animate") then return end
   for _, c in pairs(comps) do
     local T = TYPES[c.type]
-    if #T.parts > 0 and c.near and c.speed ~= 0 then
+    local spins = (c.mode == "model") and MODELS[c.type].spin ~= nil or (c.mode ~= "model" and #T.parts > 0)
+    if spins and c.near and c.speed ~= 0 and typeOn(c.type) then
       local degPerTick = c.speed * 0.3
       c.angle = ((c.angle or 0) + degPerTick) % 360
       local interval = mmax(1, mmin(10, floor(150 / mmax(1, abs(degPerTick)))))
@@ -1121,7 +1345,7 @@ local openMenu
 local function openMotorMenu(c)
   if not ui then return end
   local ok, scr = pcall(ui.screen, {
-    title = "Kreativmotor",
+    title = TYPES[c.type].name,
     init = function(screen)
       screen:label({ text = string.format("Drehzahl: %d RPM%s", c.rpm or 64, c.rev and " (rückwärts)" or ""), centered = true })
       for _, step in ipairs({ -32, -8, -1, 1, 8, 32 }) do
@@ -1142,27 +1366,290 @@ local function openMotorMenu(c)
   if ok then call(ui, "open", scr) end
 end
 
-openMenu = function()
-  if not ui then say("UI nicht verfügbar – nutze /create setzen <teil>") return end
-  local ok, scr = pcall(ui.screen, {
-    title = "Create – Baumenü",
-    init = function(screen)
-      screen:label({ text = "Ausgewählt: " .. TYPES[selected].name .. "   (R = setzen, V = drehen, X = abbauen)", centered = true })
-      for _, name in ipairs(TYPE_ORDER) do
-        local T = TYPES[name]
-        local tag = ""
-        if T.source then tag = "  [Quelle]" elseif T.impact then tag = string.format("  [%g SU/RPM]", T.impact) end
-        screen:button({ text = (name == selected and "> " or "") .. T.name .. tag, onClick = function()
-          selected = name
-          screen:close()
-          toast("Ausgewählt: " .. T.name)
-        end })
+---------------------------------------------------------------------------
+-- Addons: Zustand, Installation
+---------------------------------------------------------------------------
+local function saveAddons()
+  if storage then call(storage, "set", "addons", json.encode(addonState)) end
+end
+local function loadAddons()
+  addonState = { installed = {}, enabled = {} }
+  if not storage then return end
+  local ok, raw = call(storage, "get", "addons")
+  if ok and type(raw) == "string" then
+    local ok2, d = pcall(json.decode, raw)
+    if ok2 and type(d) == "table" then
+      addonState.installed = type(d.installed) == "table" and d.installed or {}
+      addonState.enabled = type(d.enabled) == "table" and d.enabled or {}
+    end
+  end
+end
+
+local function missingDeps(id, out, seen)
+  out, seen = out or {}, seen or {}
+  for _, d in ipairs(ADDON_BY_ID[id].deps or {}) do
+    if d ~= "create" and not seen[d] then
+      seen[d] = true
+      missingDeps(d, out, seen)
+      if not addonState.installed[d] then out[#out + 1] = d end
+    end
+  end
+  return out
+end
+
+local install = nil   -- { queue = {ids}, idx, progress }
+local STAGES = { { 0, "Verbinde …" }, { 10, "Lade herunter …" }, { 55, "Entpacke Dateien …" }, { 78, "Prüfe Abhängigkeiten …" }, { 93, "Aktiviere …" } }
+local function stageText(pr)
+  local t = STAGES[1][2]
+  for _, st in ipairs(STAGES) do if pr >= st[1] then t = st[2] end end
+  return t
+end
+local function bar(pr, width)
+  local n = floor(mmax(0, mmin(100, pr)) / 100 * width + 0.5)
+  return string.rep("█", n) .. string.rep("░", width - n)
+end
+
+local function startInstall(id)
+  if install then toast("Es läuft schon eine Installation.") return end
+  local q = missingDeps(id)
+  if not addonState.installed[id] then q[#q + 1] = id end
+  if #q == 0 then return end
+  install = { queue = q, idx = 1, progress = 0 }
+  toast("Installation gestartet: " .. ADDON_BY_ID[id].name)
+end
+
+local function stepInstall()
+  if not install then return end
+  local a = ADDON_BY_ID[install.queue[install.idx]]
+  install.progress = install.progress + 100 / (24 + a.size * 0.5)
+  if install.progress >= 100 then
+    addonState.installed[a.id] = true
+    addonState.enabled[a.id] = true
+    saveAddons()
+    toast(a.name .. " installiert")
+    say("§a" .. a.name .. " v" .. a.version .. " installiert und aktiviert.")
+    solveNeeded = true
+    install.idx = install.idx + 1
+    install.progress = 0
+    if install.idx > #install.queue then install = nil end
+  end
+end
+
+local function dependents(id)
+  local out = {}
+  for _, a in ipairs(ADDONS) do
+    for _, d in ipairs(a.deps) do
+      if d == id and addonState.enabled[a.id] then out[#out + 1] = a.id end
+    end
+  end
+  return out
+end
+
+local function toggleAddon(id)
+  if not addonState.installed[id] then return end
+  local on = not addonState.enabled[id]
+  if on then
+    for _, d in ipairs(missingDeps(id)) do
+      toast("Fehlt: " .. ADDON_BY_ID[d].name)
+      return
+    end
+    for _, d in ipairs(ADDON_BY_ID[id].deps) do if d ~= "create" then addonState.enabled[d] = true end end
+  else
+    for _, d in ipairs(dependents(id)) do addonState.enabled[d] = false end
+  end
+  addonState.enabled[id] = on
+  saveAddons()
+  solveNeeded = true
+  toast(ADDON_BY_ID[id].name .. (on and " aktiviert" or " deaktiviert"))
+end
+
+local function uninstallAddon(id)
+  for _, d in ipairs(dependents(id)) do addonState.enabled[d] = false end
+  addonState.installed[id] = nil
+  addonState.enabled[id] = nil
+  saveAddons()
+  solveNeeded = true
+  toast(ADDON_BY_ID[id].name .. " deinstalliert")
+end
+
+---------------------------------------------------------------------------
+-- Inventar-Items
+---------------------------------------------------------------------------
+local function partLabel(part) return part == "wrench" and "Schraubenschlüssel" or TYPES[part].name end
+
+local function giveCmd(k, count)
+  local glint = k[2] == "nether_star" and ",minecraft:enchantment_glint_override=false" or ""
+  return string.format('give @s minecraft:%s[minecraft:item_model="%s",minecraft:item_name="%s"%s] %d',
+    k[2], k[3], partLabel(k[1]), glint, count or k[4])
+end
+
+local function giveKit()
+  local n = 0
+  for _, k in ipairs(KIT) do
+    if k[1] == "wrench" or typeOn(k[1]) then cmd(giveCmd(k)); n = n + 1 end
+  end
+  toast(n .. " Create-Teile ins Inventar gelegt")
+end
+
+local function heldPart()
+  local ok, h = call(player, "heldItem")
+  if not ok or h == nil then return nil end
+  local id, name
+  if type(h) == "string" then id = h
+  else
+    id = field(h, "id") or field(h, "item") or field(h, "type")
+    name = field(h, "name") or field(h, "displayName") or field(h, "customName") or field(h, "label")
+  end
+  if type(name) == "string" then
+    local p = PART_BY_NAME[(name:gsub("§.", "")):lower()]
+    if p then return p end
+  end
+  if type(id) == "string" then return PART_BY_ITEM[(id:gsub("^minecraft:", ""))] end
+  return nil
+end
+
+---------------------------------------------------------------------------
+-- B-Menü
+---------------------------------------------------------------------------
+local Menu = { scr = nil, tab = "teile", detail = nil, reveal = 0, total = 0 }
+local TABS = { { "teile", "Bauteile" }, { "entdecken", "Entdecken" }, { "abh", "Abhängigkeiten" }, { "bestaetigen", "Bestätigen" } }
+
+local function menuItems()
+  local items = {}
+  local function L(t) items[#items + 1] = { "label", t } end
+  local function B(t, fn) items[#items + 1] = { "button", t, fn } end
+  if install then
+    local a = ADDON_BY_ID[install.queue[install.idx]]
+    L(string.format("%s  %s  %d%%", a.name, bar(install.progress, 20), floor(install.progress)))
+    L(stageText(install.progress) .. (#install.queue > 1 and string.format("  (%d/%d)", install.idx, #install.queue) or ""))
+  end
+  if Menu.detail then
+    local a = ADDON_BY_ID[Menu.detail]
+    L(a.name .. "  ·  v" .. a.version .. "  ·  " .. a.size .. " KB")
+    L(a.desc)
+    L("Inspiriert von " .. a.inspired)
+    local deps = {}
+    for _, d in ipairs(a.deps) do
+      deps[#deps + 1] = ADDON_BY_ID[d].name .. ((d == "create" or addonState.installed[d]) and " ✔" or " ✖")
+    end
+    L("Benötigt: " .. table.concat(deps, ", "))
+    if addonState.installed[a.id] then
+      B(addonState.enabled[a.id] and "Deaktivieren" or "Aktivieren", function() toggleAddon(a.id); Menu.refresh(false) end)
+      B("Deinstallieren", function() uninstallAddon(a.id); Menu.refresh(false) end)
+    elseif install then
+      L("Installation läuft …")
+    else
+      local miss = missingDeps(a.id)
+      local txt = "↓ Installieren"
+      if #miss > 0 then
+        local names = {}
+        for _, d in ipairs(miss) do names[#names + 1] = ADDON_BY_ID[d].name end
+        txt = "↓ Installieren (mit " .. table.concat(names, ", ") .. ")"
       end
-      screen:button({ text = "Schließen", onClick = function() screen:close() end })
-    end,
+      B(txt, function() startInstall(a.id); Menu.refresh(false) end)
+    end
+    B("← Zurück", function() Menu.detail = nil; Menu.refresh(true) end)
+    return items
+  end
+  if Menu.tab == "teile" then
+    L("Klick = ins Inventar · Rechtsklick mit dem Teil setzt es · Schraubenschlüssel dreht")
+    for _, k in ipairs(KIT) do
+      if k[1] == "wrench" or typeOn(k[1]) then
+        local T = TYPES[k[1]]
+        local tag = ""
+        if T and T.source then tag = "  · Quelle" elseif T and T.impact then tag = string.format("  · %g SU/RPM", T.impact) end
+        if T and T.addon then tag = tag .. "  · " .. ADDON_BY_ID[T.addon].name end
+        B(partLabel(k[1]) .. "  ×" .. k[4] .. tag, function() cmd(giveCmd(k)); toast(partLabel(k[1]) .. " erhalten") end)
+      end
+    end
+    B("Alle Teile geben", function() giveKit() end)
+  elseif Menu.tab == "entdecken" then
+    L("Addons für den Create-Port – anklicken für Details")
+    for _, a in ipairs(ADDONS) do
+      local st = addonState.installed[a.id] and (addonState.enabled[a.id] and "✔ aktiv" or "○ aus") or "↓ verfügbar"
+      B(a.name .. "   " .. st, function() Menu.detail = a.id; Menu.refresh(true) end)
+    end
+  elseif Menu.tab == "abh" then
+    L("Abhängigkeiten der Addons")
+    for _, a in ipairs(ADDONS) do
+      local parts = {}
+      for _, d in ipairs(a.deps) do
+        parts[#parts + 1] = ADDON_BY_ID[d].name .. ((d == "create" or addonState.installed[d]) and " ✔" or " ✖")
+      end
+      L(a.name .. "  →  " .. table.concat(parts, ", "))
+    end
+  elseif Menu.tab == "bestaetigen" then
+    L("Installierte Mods – Klick schaltet an oder aus")
+    B("Create (Port) v" .. MOD_VERSION .. "   ✔ immer aktiv", function() end)
+    local any = false
+    for _, a in ipairs(ADDONS) do
+      if addonState.installed[a.id] then
+        any = true
+        B(a.name .. "   " .. (addonState.enabled[a.id] and "✔ AKTIVIERT" or "✖ DEAKTIVIERT"), function()
+          toggleAddon(a.id)
+          Menu.refresh(false)
+        end)
+      end
+    end
+    if not any then L("Noch keine Addons installiert – Tab „Entdecken“.") end
+  end
+  L("────────────────────────────")
+  for _, t in ipairs(TABS) do
+    B((Menu.tab == t[1] and "▶ " or "") .. t[2], function() Menu.tab = t[1]; Menu.detail = nil; Menu.refresh(true) end)
+  end
+  B("Schließen", function() Menu.close() end)
+  return items
+end
+
+function Menu.build(s)
+  Menu.scr = s
+  local items = menuItems()
+  Menu.total = #items
+  for i, it in ipairs(items) do
+    if i > Menu.reveal then break end
+    if it[1] == "label" then pcall(s.label, s, { text = it[2], centered = true })
+    else pcall(s.button, s, { text = it[2], onClick = it[3] }) end
+  end
+end
+
+function Menu.refresh(animate)
+  if animate then Menu.reveal = 0 else Menu.reveal = mmax(Menu.reveal, 999) end
+  if Menu.scr then pcall(Menu.scr.rebuild, Menu.scr) end
+end
+
+function Menu.close()
+  if Menu.scr then pcall(Menu.scr.close, Menu.scr) end
+  Menu.scr = nil
+end
+
+function Menu.open(tab)
+  if not ui then say("UI nicht verfügbar – nutze /create kit und /create setzen <teil>") return end
+  if tab then Menu.tab = tab end
+  Menu.detail = nil
+  Menu.reveal = 0
+  local ok, scr = pcall(ui.screen, {
+    title = "Create",
+    closeOnEsc = true,
+    init = function(s) Menu.build(s) end,
+    onClose = function() Menu.scr = nil end,
   })
   if ok then call(ui, "open", scr) else say("Menü-Fehler: " .. tostring(scr)) end
 end
+
+-- Eingeblendet in Schritten (Animation) und live aktualisiert während einer Installation
+function Menu.tick()
+  if not Menu.scr then return end
+  local okS, scr = call(game, "screen")
+  if okS and scr == nil and tickNo > 2 then Menu.scr = nil return end
+  local changed = false
+  if Menu.reveal < Menu.total then Menu.reveal = Menu.reveal + 3; changed = true end
+  if install and tickNo % 2 == 0 then changed = true end
+  if Menu.wasInstalling and not install then changed = true end
+  Menu.wasInstalling = install ~= nil
+  if changed then pcall(Menu.scr.rebuild, Menu.scr) end
+end
+
+openMenu = function(tab) Menu.open(tab) end
 
 ---------------------------------------------------------------------------
 -- Tasten
@@ -1170,7 +1657,7 @@ end
 local function wrench()
   local c = targetComponent()
   if not c then say("Schau auf ein Create-Bauteil.") return end
-  if c.type == "motor" then openMotorMenu(c) return end
+  if c.type == "motor" or c.type == "electric_motor" then openMotorMenu(c) return end
   if c.type == "water_wheel" then
     c.rev = not c.rev
     dirty, solveNeeded = true, true
@@ -1181,9 +1668,15 @@ local function wrench()
   toast(TYPES[c.type].name .. " gedreht")
 end
 
+local function pickUp(c)
+  remove(c)
+  for _, k in ipairs(KIT) do if k[1] == c.type then cmd(giveCmd(k, 1)) end end
+  toast(TYPES[c.type].name .. " aufgehoben")
+end
+
 if keys then
   local function bind(spec) pcall(keys.bind, spec) end
-  bind({ id = "menu", label = "Create: Baumenü", default = "b", onPress = function() openMenu() end })
+  bind({ id = "menu", label = "Create: Menü", default = "b", onPress = function() if active then openMenu() end end })
   bind({ id = "place", label = "Create: Bauteil setzen", default = "r", onPress = function() if active then placeSelected() end end })
   bind({ id = "wrench", label = "Create: Schraubenschlüssel", default = "v", onPress = function() if active then wrench() end end })
   bind({ id = "remove", label = "Create: Bauteil abbauen", default = "x", onPress = function()
@@ -1200,6 +1693,10 @@ local function updateCrank()
   if not held and keys then
     local ok, d = call(keys, "isDown", "g")
     held = ok and d == true
+  end
+  if not held then
+    local ok, d = call(lib("mouse"), "isDown", "right")
+    held = ok and d == true and heldPart() == nil
   end
   if not held then return end
   local c = targetComponent()
@@ -1218,13 +1715,23 @@ end
 ---------------------------------------------------------------------------
 local function argb(hex) return hex end
 if hud then
+  pcall(hud.add, "create_install", function(ctx)
+    if not install then return end
+    local w = field(ctx, "width") or 320
+    local a = ADDON_BY_ID[install.queue[install.idx]]
+    local bw, x = 182, floor(w / 2 - 91)
+    pcall(ctx.rect, ctx, x - 2, 2, bw + 4, 22, 0xC0101018)
+    pcall(ctx.rect, ctx, x, 14, bw, 6, 0xFF3A3A3A)
+    pcall(ctx.rect, ctx, x, 14, floor(bw * mmin(100, install.progress) / 100), 6, 0xFFD6A04A)
+    pcall(ctx.text, ctx, string.format("%s – %s %d%%", a.name, stageText(install.progress), floor(install.progress)), x, 4, "#FFFFFF")
+  end)
   pcall(hud.add, "create_goggles", function(ctx)
     if not active or not setting("goggles") then return end
     local okS, scr = call(game, "screen")
     if okS and scr then return end
     local w, h = field(ctx, "width") or 320, field(ctx, "height") or 240
     -- Auswahl-Anzeige
-    local label = "Create: " .. TYPES[selected].name .. "  [B] Menü"
+    local label = "Create: " .. TYPES[selected].name .. "  ·  [B] Menü"
     pcall(ctx.text, ctx, label, 4, h - 12, argb("#FFD27F"))
     local c = targetComponent()
     if not c then return end
@@ -1240,7 +1747,12 @@ if hud then
       if net.conflict then lines[#lines + 1] = { "Konflikt: Drehrichtungen widersprechen sich.", "#FF5555" } end
       if net.overspeed then lines[#lines + 1] = { "Begrenzt auf 256 RPM.", "#FFAA00" } end
     end
-    if T.source and T.source.manual then lines[#lines + 1] = { "[G] halten zum Kurbeln (Schleichen = rückwärts)", "#CCCCCC" } end
+    if T.addon == "elektrik" then
+      lines[#lines + 1] = { string.format("Strom: %d FE%s", floor(energy), (c.type == "electric_motor" and not c.powered) and " – zu wenig!" or ""),
+        (c.type == "electric_motor" and not c.powered) and "#FF5555" or "#7FD4FF" }
+    end
+    if T.addon and not typeOn(c.type) then lines[#lines + 1] = { "Addon deaktiviert (B → Bestätigen)", "#FF5555" } end
+    if T.source and T.source.manual then lines[#lines + 1] = { "Rechtsklick oder [G] halten zum Kurbeln", "#CCCCCC" } end
     if c.type == "motor" then lines[#lines + 1] = { "[V] Drehzahl einstellen", "#CCCCCC" } end
     local tw = 0
     for _, l in ipairs(lines) do
@@ -1261,6 +1773,7 @@ local ALIASES = {
   getriebe = "gearbox", kurbel = "crank", handkurbel = "crank", wasserrad = "water_wheel", motor = "motor",
   bohrer = "drill", luefter = "fan", ["lüfter"] = "fan", presse = "press", mahlstein = "millstone",
   band = "belt", foerderband = "belt", ["förderband"] = "belt", tacho = "speedometer", stress = "stressometer",
+  kanone = "cannon", lichtmaschine = "alternator", elektromotor = "electric_motor", propeller = "propeller_bearing",
 }
 
 local function typeFromArg(a)
@@ -1298,9 +1811,9 @@ local function dumpApi()
 end
 
 local function help()
-  say("§eBefehle:§r /create menü | setzen <teil> | entfernen | liste | netz | motor <rpm> | zurücksetzen | api")
+  say("§eBefehle:§r /create menü | kit | setzen <teil> | entfernen | liste | netz | motor <rpm> | addons | neubauen | zurücksetzen | api")
   say("Teile: welle, zahnrad, gross, getriebe, kurbel, wasserrad, motor, bohrer, lüfter, presse, mahlstein, band, tacho, stress")
-  say("Tasten: B Menü · R setzen · V drehen/einstellen · X abbauen · G kurbeln. Welt braucht Cheats!")
+  say("B öffnet das Menü (Bauteile, Addons). Teil in die Hand + Rechtsklick setzt es. Schraubenschlüssel: Rechtsklick dreht, Schleichen+Rechtsklick hebt auf. Welt braucht Cheats!")
 end
 
 if commands then
@@ -1309,6 +1822,15 @@ if commands then
     local sub = (args[1] or "hilfe"):lower()
     if sub == "hilfe" or sub == "help" then help()
     elseif sub == "menü" or sub == "menu" or sub == "menue" then openMenu()
+    elseif sub == "kit" or sub == "teile" then giveKit()
+    elseif sub == "addons" then openMenu("entdecken")
+    elseif sub == "neubauen" or sub == "rebuild" then
+      for _, c in pairs(comps) do
+        unbuildComponent(c, true)
+        c.mode = setting("models") and "model" or "parts"
+        buildComponent(c)
+      end
+      say("Alle Bauteile neu aufgebaut (" .. (setting("models") and "3D-Modelle" or "Vanilla-Teile") .. ").")
     elseif sub == "setzen" or sub == "set" then
       local t = typeFromArg(args[2])
       if not t then say("Unbekanntes Teil. /create hilfe") return end
@@ -1354,6 +1876,7 @@ end
 ---------------------------------------------------------------------------
 local function onJoin()
   worldKey = worldName()
+  loadAddons()
   loadState()
   active = true
   solveNeeded = true
@@ -1381,7 +1904,10 @@ on("tick", function()
     if ok and ex then onJoin() else return end
   end
   tickNo = tickNo + 1
+  stepInstall()
+  Menu.tick()
   updateCrank()
+  updateEnergy()
   if tickNo % 10 == 1 then updateNear() end
   -- Kurbeln läuft aus
   for _, c in pairs(comps) do
@@ -1397,6 +1923,37 @@ on("tick", function()
   if dirty and tickNo % 100 == 0 then save() end
 end)
 
+local lastUse = -100
+on("mouse_click", function(e)
+  if not active then return end
+  local okS, scr = call(game, "screen")
+  if okS and scr then return end
+  local action = field(e, "action") or field(e, "state")
+  if action == "release" or action == "up" or field(e, "pressed") == false then return end
+  local b = field(e, "button")
+  local right
+  if b ~= nil then right = (b == "right" or b == 1 or b == "1" or b == "secondary")
+  else
+    local ok, d = call(lib("mouse"), "isDown", "right")
+    right = ok and d == true
+  end
+  if not right then return end
+  local part = heldPart()
+  if not part then return end
+  pcall(function() e:cancel() end)
+  if tickNo - lastUse < 4 then return end
+  lastUse = tickNo
+  if part == "wrench" then
+    local c = targetComponent()
+    if not c then return end
+    local okSn, sneaking = call(player, "isSneaking")
+    if okSn and sneaking then pickUp(c) else wrench() end
+  else
+    selected = part
+    placeSelected()
+  end
+end)
+
 on("chat_receive", function(e)
   if not setting("quiet") then return end
   if tickNo - lastCmdTick > 40 then return end
@@ -1407,4 +1964,5 @@ on("chat_receive", function(e)
   end
 end)
 
-logMsg("Create-Port v" .. MOD_VERSION .. " geladen. /create hilfe")
+loadAddons()
+logMsg("Create-Port v" .. MOD_VERSION .. " geladen. B = Menü, /create hilfe")

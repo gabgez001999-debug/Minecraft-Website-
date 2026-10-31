@@ -1,0 +1,37 @@
+{
+  "_info": "Welche Original-Create-Modelle (aus deiner eigenen Create-Jar) der Konverter für welche Modelle des Ports einsetzt. Pfade relativ zu assets/create/models/. Fehlt ein Modell oder nutzt es einen eigenen Create-Loader, bleibt das Modell aus dem Port-Paket.",
+  "display": {
+    "d_shaft": ["block/shaft"],
+    "d_cog": ["block/cogwheel"],
+    "d_lcog": ["block/large_cogwheel"],
+    "d_gearbox": ["block/gearbox/block"],
+    "d_crank": ["block/hand_crank/block", "block/hand_crank/handle"],
+    "d_cmotor": ["block/creative_motor/block_vertical"],
+    "d_drill_c": ["block/mechanical_drill/block"],
+    "d_drill_h": ["block/mechanical_drill/head"],
+    "d_fan_c": ["block/encased_fan/block"],
+    "d_prop": ["block/encased_fan/propeller"],
+    "d_press_c": ["block/mechanical_press/block"],
+    "d_press_h": ["block/mechanical_press/head"],
+    "d_mill_b": ["block/millstone/block"],
+    "d_mill_i": ["block/millstone/inner"],
+    "d_speedo": ["item/speedometer"],
+    "d_stresso": ["item/stressometer"]
+  },
+  "items": {
+    "shaft": ["item/shaft"],
+    "cogwheel": ["item/cogwheel"],
+    "large_cogwheel": ["item/large_cogwheel"],
+    "gearbox": ["item/gearbox"],
+    "hand_crank": ["item/hand_crank"],
+    "water_wheel": ["item/water_wheel"],
+    "creative_motor": ["item/creative_motor"],
+    "mechanical_drill": ["item/mechanical_drill"],
+    "encased_fan": ["item/encased_fan"],
+    "mechanical_press": ["item/mechanical_press"],
+    "millstone": ["item/millstone"],
+    "speedometer": ["item/speedometer"],
+    "stressometer": ["item/stressometer"],
+    "wrench": ["item/wrench"]
+  }
+}

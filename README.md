@@ -5,15 +5,24 @@ Zwei inoffizielle Mods für den **Eaglercraft-26.3-Client** mit seinem eingebaut
 
 | Mod | Datei | Inhalt |
 |-----|-------|--------|
-| **Create (Eaglercraft-Port)** | [`dist/create_zeus.zip`](dist/create_zeus.zip) | Wellen, Zahnräder, Getriebe, Handkurbel, Wasserrad, Kreativmotor, Bohrer, Lüfter, Presse, Mahlstein, Förderband, Tacho, Stressometer, Stress-System, Ingenieursbrille |
+| **Create (Eaglercraft-Port)** v0.2 | [`dist/create_zeus.zip`](dist/create_zeus.zip) | 18 Bauteile als Items, drehende 3D-Modelle, Rechtsklick-Platzierung, Schraubenschlüssel, B-Menü mit Addons (Kanonen, Elektrik, Aeronautik), Stress-System, Ingenieursbrille |
+| **Ressourcenpaket** | [`dist/create_zeus_resources.zip`](dist/create_zeus_resources.zip) | 21 eigene 3D-Modelle im Create-Stil ([Vorschau](vorschau.html)) – oder per Konverter die Original-Modelle aus deiner eigenen Create-Jar |
 | **MC-Device (Eaglercraft-Port)** | [`dist/mc_device_zeus.zip`](dist/mc_device_zeus.zip) | Handy mit GPS/Wegpunkten, Uhr/Wecker, Wetter, Rechner, Notizen, Musik, Status, Taschenlampe, Staubsauger, Laptop für Create-Anlagen |
 
 ## Installation
 
 1. [eaglercraft.com/play?version=26.3](https://eaglercraft.com/play?version=26.3) öffnen.
 2. Einzelspieler-Welt **mit Cheats** erstellen.
-3. Hauptmenü → **Mods** → **Importieren** → `.zip` wählen (oder Datei aufs Fenster ziehen).
-4. In der Welt: `B` = Create-Baumenü, `P` = Handy. `/create hilfe` zeigt alle Befehle.
+3. Optionen → Ressourcenpakete → `create_zeus_resources.zip` hinzufügen und aktivieren.
+4. Hauptmenü → **Mods** → **Importieren** → `create_zeus.zip` wählen (oder Datei aufs Fenster ziehen).
+5. In der Welt: `B` = Create-Menü (Tab Bauteile → „Alle Teile geben“), Teil in die Hand + Rechtsklick setzt es. `P` = Handy.
+
+## Original-Create-Modelle
+
+Create-Assets sind „All Rights Reserved“ und liegen deshalb nicht in diesem Repo. Die Webseite (Abschnitt
+„Original-Create-Modelle“) oder `python tools/convert_create.py <create.jar>` baut aus deiner eigenen Create-Jar lokal
+ein Ressourcenpaket mit den Originalmodellen. Getestet mit Create 6.0.10: 29 von 30 Modellen werden ersetzt
+(nur das Wasserrad bleibt, weil Create dafür einen OBJ-Loader nutzt). Zuordnung: [`converter/create_mapping.json`](converter/create_mapping.json).
 
 ## Wie das funktioniert
 
@@ -34,7 +43,7 @@ offizieller Doku. Bei Abweichungen hilft `/create api`: Das schreibt alle verfü
 ```bash
 pip install lupa pillow
 python tools/test_mods.py   # testet beide Mods gegen den API-Nachbau tools/zeus_mock.lua
-python tools/build.py       # baut dist/*.zip und dist/*.lua
+python tools/build.py       # baut dist/*.zip, dist/*.lua und das Ressourcenpaket (resourcepack/)
 ```
 
 ## Credits
