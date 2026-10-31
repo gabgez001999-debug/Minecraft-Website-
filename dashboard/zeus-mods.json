@@ -1,0 +1,62 @@
+{
+ "source": "https://github.com/gabgez001999-debug/Minecraft-Website-",
+ "license": "MIT",
+ "mods": [
+  {
+   "id": "create_zeus",
+   "file": "create_zeus.zip",
+   "title": "Create (Eaglercraft-Port)",
+   "description": "Wellen, Zahnräder, Motoren und Maschinen mit drehenden 3D-Modellen, B-Menü mit 6 Addons und Stress-System. Welt mit Cheats nötig.",
+   "author": "Larpbase",
+   "category": "Inhalt",
+   "dependencies": [
+    "create_zeus_resources"
+   ],
+   "versions": [
+    "26.3",
+    "26.2"
+   ],
+   "size": 29758,
+   "url": "dist/create_zeus.zip",
+   "loader": "zeus",
+   "kind": "mod",
+   "version": "0.4.0"
+  },
+  {
+   "id": "create_zeus_resources",
+   "file": "create_zeus_resources.zip",
+   "title": "Create-Ressourcenpaket",
+   "description": "Die 3D-Modelle für Create. Kommt unter Optionen → Ressourcenpakete → „Import Pack…“ rein, nicht ins Mods-Menü.",
+   "author": "Larpbase",
+   "category": "Ressourcenpaket",
+   "dependencies": [],
+   "versions": [
+    "26.3",
+    "26.2"
+   ],
+   "size": 55356,
+   "url": "dist/create_zeus_resources.zip",
+   "loader": "zeus",
+   "kind": "resourcepack",
+   "version": ""
+  },
+  {
+   "id": "mc_device_zeus",
+   "file": "mc_device_zeus.zip",
+   "title": "MC-Device (Handy)",
+   "description": "Handy mit GPS, Wegpunkten, Uhr, Wetter, Rechner, Notizen, Musik, Taschenlampe und Laptop für Create-Anlagen.",
+   "author": "Larpbase",
+   "category": "Werkzeug",
+   "dependencies": [],
+   "versions": [
+    "26.3",
+    "26.2"
+   ],
+   "size": 7998,
+   "url": "dist/mc_device_zeus.zip",
+   "loader": "zeus",
+   "kind": "mod",
+   "version": "0.1.0"
+  }
+ ]
+}

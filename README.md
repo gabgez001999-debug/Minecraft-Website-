@@ -1,6 +1,6 @@
-# Create & MC-Device für Eaglercraft 26.3 (Lua-Mods)
+# Create & MC-Device für Eaglercraft 26.3 und 26.2 (Lua-Mods)
 
-Zwei inoffizielle Mods für den **Eaglercraft-26.3-Client** mit seinem eingebauten Mod-System „Zeus“
+Zwei inoffizielle Mods für die **Eaglercraft-Clients 26.3 und 26.2** mit ihrem eingebauten Mod-System „Zeus“
 (Lua 5.4, Mod-API 1). Webseite mit Download und Anleitung: [`index.html`](index.html), gedacht für GitHub Pages.
 
 | Mod | Datei | Inhalt |
@@ -9,24 +9,35 @@ Zwei inoffizielle Mods für den **Eaglercraft-26.3-Client** mit seinem eingebaut
 | **Ressourcenpaket** | [`dist/create_zeus_resources.zip`](dist/create_zeus_resources.zip) | 35 eigene 3D-Modelle im Create-Stil ([Vorschau](vorschau.html)) – oder per Konverter die Original-Modelle aus deiner eigenen Create-Jar |
 | **MC-Device (Eaglercraft-Port)** | [`dist/mc_device_zeus.zip`](dist/mc_device_zeus.zip) | Handy mit GPS/Wegpunkten, Uhr/Wecker, Wetter, Rechner, Notizen, Musik, Status, Taschenlampe, Staubsauger, Laptop für Create-Anlagen |
 
-## Mod-Loader-Dashboard (EaglerForge)
+## Mod-Dashboard
 
-[`dashboard.html`](dashboard.html) ist ein Launcher im Browser für **EaglerForge** (JavaScript-Mods für Eaglercraft 1.8.8 / 1.12.2):
+[`dashboard.html`](dashboard.html) ist ein Launcher im Browser mit zwei Loadern:
 
-- Beim ersten Start eine Instanz anlegen (Name, Version, Loader). Oben rechts siehst und wechselst du Instanz, Loader und Version.
-- **Mods entdecken:** 35 echte Mods aus den offiziellen EaglerForge-Beispielmods (MIT). Braucht eine Mod andere
-  (z. B. WorldEdit → LibCustomItems, Guns → AsyncSink), fragt ein Popup, ob die mit heruntergeladen werden sollen.
-- **Spielen** (unten rechts) öffnet deinen EaglerForge-Client mit den Mods der Instanz in einem neuen Tab. Dafür einmal unter
+| Version | Loader | Mods | „Spielen“ |
+|---------|--------|------|-----------|
+| 26.3, 26.2 | **Zeus (Lua)**, eingebaut | Create, Ressourcenpaket, MC-Device aus diesem Repo | öffnet eaglercraft.com in der Version und zeigt, wie die Dateien ins Mods-Menü kommen (der Client kann Mods nicht von außen vorladen) |
+| 1.8.8, 1.12.2 | **EaglerForge** | 35 offizielle Beispielmods | startet deinen EaglerForge-Client mit den Mods |
+
+Ablauf:
+
+- Beim ersten Start eine Instanz anlegen (Name, Version, Loader). Die Version bestimmt den Loader. Oben rechts siehst und
+  wechselst du Instanz, Loader und Version.
+- **Mods entdecken** zeigt nur Mods für den Loader der Instanz. Braucht eine Mod andere (z. B. Create → Ressourcenpaket,
+  WorldEdit → LibCustomItems, Guns → AsyncSink), fragt ein Popup, ob die mit heruntergeladen werden sollen.
+- **Spielen** (unten rechts) bei 26.x: neuer Tab mit eaglercraft.com in der Version, dazu die Import-Hilfe mit allen Dateien.
+  Nach „Erledigt“ startet die Instanz direkt, bis sich Mods oder Version ändern.
+- **Spielen** bei EaglerForge: öffnet deinen EaglerForge-Client mit den Mods der Instanz in einem neuen Tab. Dafür einmal unter
   Einstellungen die `processed.html` aus dem [EaglerForge Injector](https://eaglerforge.github.io/EaglerForgeInjector/) hochladen
   (bleibt nur im Browser) oder die Adresse eines gehosteten EaglerForge-Clients eintragen.
 - **Mehrspieler:** Einladungslink teilen. Wer andere Mods hat, bekommt beim Öffnen die Frage, ob eine Instanz mit allen Mods der Welt erstellt werden soll.
 
-Der Katalog [`dashboard/eaglerforge-mods.json`](dashboard/eaglerforge-mods.json) entsteht mit
+Kataloge: [`dashboard/zeus-mods.json`](dashboard/zeus-mods.json) baut `python tools/build.py` mit,
+[`dashboard/eaglerforge-mods.json`](dashboard/eaglerforge-mods.json) entsteht mit
 `python tools/build_ef_catalog.py <klon-von-EaglerForgeInjector>` und zeigt auf einen festen Commit.
 
 ## Installation
 
-1. [eaglercraft.com/play?version=26.3](https://eaglercraft.com/play?version=26.3) öffnen.
+1. [eaglercraft.com/play?version=26.3](https://eaglercraft.com/play?version=26.3) oder [26.2](https://eaglercraft.com/play?version=26.2) öffnen.
 2. Einzelspieler-Welt **mit Cheats** erstellen.
 3. **Ressourcenpaket (nicht bei Mods!):** Optionen → Ressourcenpakete… → „Import Pack…“ → `create_zeus_resources.zip`
    wählen, dann links beim Paket auf den Pfeil klicken, damit es zu „Ausgewählt“ wandert → Fertig.
@@ -42,7 +53,10 @@ ein Ressourcenpaket mit den Originalmodellen. Getestet mit Create 6.0.10: 43 Mod
 
 ## Wie das funktioniert
 
-- Der 26.3-Client bringt einen eigenen Lua-Interpreter mit. Mods sind `.zip`-Dateien mit
+- Die 26.x-Clients bringen einen eigenen Lua-Interpreter mit. 26.2 und 26.3 sind derselbe Zeus-Stand
+  (gleiche Lua-API 1, gleiche Prüfung der `metadata.json`), nur das Ressourcenpaket-Format unterscheidet sich
+  (26.2: 88, 26.3: 97.1). Das Paket deckt mit `min_format` 88 beide ab.
+- Mods sind `.zip`-Dateien mit
   `metadata.json` + `icon.png` (64×64) + `main.lua`, oder einzelne `.lua`-Dateien mit Kopfkommentaren.
 - Die API ist **clientseitig**: Events (`tick`, `world_join`, `chat_receive` …), HUD, Tasten,
   eigene Menüs, Chatbefehle, Spielerdaten, `storage`. Eigene Blöcke registrieren geht nicht.
@@ -51,7 +65,7 @@ ein Ressourcenpaket mit den Originalmodellen. Getestet mit Create 6.0.10: 43 Mod
   Drehzahl, Übersetzung und Stress rechnet die Mod selbst in Lua.
 - Mods laufen nur im Einzelspieler. Auf Servern und bei LAN-Welten pausiert der Client sie.
 
-Die API-Namen stammen aus der Analyse des 26.3-Clients (eingebaute Beispiel-Mods und Strings), nicht aus
+Die API-Namen stammen aus der Analyse der 26.x-Clients (eingebaute Beispiel-Mods und Strings), nicht aus
 offizieller Doku. Bei Abweichungen hilft `/create api`: Das schreibt alle verfügbaren Lua-Funktionen ins Mod-Log.
 
 ## Entwicklung

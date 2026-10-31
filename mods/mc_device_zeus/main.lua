@@ -2,7 +2,7 @@
 -- id: mc_device_zeus
 -- version: 0.1.0
 -- author: Larpbase
--- description: Inoffizieller Port der Idee von "Phone: MC-Device" für Eaglercraft 26.3 (Zeus-Lua). Handy mit Apps, Staubsauger, Taschenlampe und Laptop für Create-Anlagen.
+-- description: Inoffizieller Port der Idee von "Phone: MC-Device" für Eaglercraft 26.2 und 26.3 (Zeus-Lua). Handy mit Apps, Staubsauger, Taschenlampe und Laptop für Create-Anlagen.
 --
 -- Hinweis: Zeus-Mods laufen nur im Einzelspieler. Anrufe zwischen Spielern (das Herzstück von
 -- MC-Device) gehen deshalb nicht; das Handy konzentriert sich auf nützliche Einzelspieler-Apps.

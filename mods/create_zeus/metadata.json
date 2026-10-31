@@ -4,8 +4,8 @@
   "version": "0.4.0",
   "api": 1,
   "main": "main.lua",
-  "minecraft": "26.3",
-  "description": "Inoffizieller Create-Port für Eaglercraft 26.3: drehende 3D-Modelle (Ressourcenpaket), Bauteile als Items mit Rechtsklick-Platzierung, Schraubenschlüssel, B-Menü mit 6 Addons (Kanonen, Elektrik, Aeronautik, Dragons Plus, Verzauberungsindustrie, Kraftwerk) samt Abhängigkeiten, Stress-System. Einzelspieler-Welt mit Cheats nötig.",
+  "minecraft": "26.2-26.3",
+  "description": "Inoffizieller Create-Port für Eaglercraft 26.2 und 26.3: drehende 3D-Modelle (Ressourcenpaket), Bauteile als Items mit Rechtsklick-Platzierung, Schraubenschlüssel, B-Menü mit 6 Addons (Kanonen, Elektrik, Aeronautik, Dragons Plus, Verzauberungsindustrie, Kraftwerk) samt Abhängigkeiten, Stress-System. Einzelspieler-Welt mit Cheats nötig.",
   "authors": [
     "Larpbase"
   ],

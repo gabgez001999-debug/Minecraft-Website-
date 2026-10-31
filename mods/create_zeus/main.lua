@@ -2,7 +2,7 @@
 -- id: create_zeus
 -- version: 0.4.0
 -- author: Larpbase
--- description: Inoffizieller Create-Port für Eaglercraft 26.3 (Zeus-Lua). Wellen, Zahnräder, Motoren, Bohrer, Lüfter, Presse, Mahlstein, Förderband und Stress-System.
+-- description: Inoffizieller Create-Port für Eaglercraft 26.2 und 26.3 (Zeus-Lua). Wellen, Zahnräder, Motoren, Bohrer, Lüfter, Presse, Mahlstein, Förderband und Stress-System.
 --
 -- Funktionsweise
 --   * Zeus-Lua-Mods laufen nur im Einzelspieler und können keine eigenen Blöcke registrieren.

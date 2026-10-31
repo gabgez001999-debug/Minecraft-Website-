@@ -16,7 +16,9 @@
     "1.12.2"
    ],
    "size": 22343,
-   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/AsyncSink.js"
+   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/AsyncSink.js",
+   "loader": "eaglerforge",
+   "kind": "mod"
   },
   {
    "id": "libcustomitems",
@@ -30,7 +32,9 @@
     "1.8.8"
    ],
    "size": 11167,
-   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/lib.customitems.js"
+   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/lib.customitems.js",
+   "loader": "eaglerforge",
+   "kind": "mod"
   },
   {
    "id": "worldedit",
@@ -46,7 +50,9 @@
     "1.8.8"
    ],
    "size": 13020,
-   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/Worldedit.js"
+   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/Worldedit.js",
+   "loader": "eaglerforge",
+   "kind": "mod"
   },
   {
    "id": "veinminer",
@@ -60,7 +66,9 @@
     "1.8.8"
    ],
    "size": 6916,
-   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/veinminer.js"
+   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/veinminer.js",
+   "loader": "eaglerforge",
+   "kind": "mod"
   },
   {
    "id": "waypoints",
@@ -74,7 +82,9 @@
     "1.8.8"
    ],
    "size": 6783,
-   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/waypoints.js"
+   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/waypoints.js",
+   "loader": "eaglerforge",
+   "kind": "mod"
   },
   {
    "id": "hats",
@@ -88,7 +98,9 @@
     "1.8.8"
    ],
    "size": 1966,
-   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/hats.js"
+   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/hats.js",
+   "loader": "eaglerforge",
+   "kind": "mod"
   },
   {
    "id": "grapplehook",
@@ -102,7 +114,9 @@
     "1.8.8"
    ],
    "size": 2554,
-   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/grapplehook.js"
+   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/grapplehook.js",
+   "loader": "eaglerforge",
+   "kind": "mod"
   },
   {
    "id": "guns",
@@ -118,7 +132,9 @@
     "1.8.8"
    ],
    "size": 6540,
-   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/guns.js"
+   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/guns.js",
+   "loader": "eaglerforge",
+   "kind": "mod"
   },
   {
    "id": "guns_craftable",
@@ -134,7 +150,9 @@
     "1.8.8"
    ],
    "size": 8485,
-   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/guns_craftable.js"
+   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/guns_craftable.js",
+   "loader": "eaglerforge",
+   "kind": "mod"
   },
   {
    "id": "duck",
@@ -150,7 +168,9 @@
     "1.8.8"
    ],
    "size": 26857,
-   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/DuckMod.js"
+   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/DuckMod.js",
+   "loader": "eaglerforge",
+   "kind": "mod"
   },
   {
    "id": "wine",
@@ -166,7 +186,9 @@
     "1.8.8"
    ],
    "size": 67673,
-   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/winemod.js"
+   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/winemod.js",
+   "loader": "eaglerforge",
+   "kind": "mod"
   },
   {
    "id": "unlucky_blocks",
@@ -182,7 +204,9 @@
     "1.8.8"
    ],
    "size": 6952,
-   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/unlucky_blocks.js"
+   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/unlucky_blocks.js",
+   "loader": "eaglerforge",
+   "kind": "mod"
   },
   {
    "id": "block_of_steve",
@@ -198,7 +222,9 @@
     "1.8.8"
    ],
    "size": 6184,
-   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/block_of_steve_simple.js"
+   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/block_of_steve_simple.js",
+   "loader": "eaglerforge",
+   "kind": "mod"
   },
   {
    "id": "custom_block",
@@ -214,7 +240,9 @@
     "1.8.8"
    ],
    "size": 21461,
-   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/Tutorial_Custom_Block.js"
+   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/Tutorial_Custom_Block.js",
+   "loader": "eaglerforge",
+   "kind": "mod"
   },
   {
    "id": "custom_item",
@@ -230,7 +258,9 @@
     "1.8.8"
    ],
    "size": 4866,
-   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/Tutorial_Custom_Item.js"
+   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/Tutorial_Custom_Item.js",
+   "loader": "eaglerforge",
+   "kind": "mod"
   },
   {
    "id": "useless_item",
@@ -246,7 +276,9 @@
     "1.8.8"
    ],
    "size": 3429,
-   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/useless_item_example_mod.js"
+   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/useless_item_example_mod.js",
+   "loader": "eaglerforge",
+   "kind": "mod"
   },
   {
    "id": "custom_items_demo",
@@ -262,7 +294,9 @@
     "1.8.8"
    ],
    "size": 1515,
-   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/CustomItemsDemo.js"
+   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/CustomItemsDemo.js",
+   "loader": "eaglerforge",
+   "kind": "mod"
   },
   {
    "id": "diamond_recipe",
@@ -276,7 +310,9 @@
     "1.8.8"
    ],
    "size": 2190,
-   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/diamondBlockCustomCraft.js"
+   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/diamondBlockCustomCraft.js",
+   "loader": "eaglerforge",
+   "kind": "mod"
   },
   {
    "id": "flammable_string",
@@ -290,7 +326,9 @@
     "1.8.8"
    ],
    "size": 427,
-   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/flammable_string.js"
+   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/flammable_string.js",
+   "loader": "eaglerforge",
+   "kind": "mod"
   },
   {
    "id": "timescale",
@@ -304,7 +342,9 @@
     "1.8.8"
    ],
    "size": 3860,
-   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/timescale_command.js"
+   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/timescale_command.js",
+   "loader": "eaglerforge",
+   "kind": "mod"
   },
   {
    "id": "faster_minecarts",
@@ -318,7 +358,9 @@
     "1.8.8"
    ],
    "size": 1000,
-   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/faster_minecarts.js"
+   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/faster_minecarts.js",
+   "loader": "eaglerforge",
+   "kind": "mod"
   },
   {
    "id": "xpspawner",
@@ -332,7 +374,9 @@
     "1.8.8"
    ],
    "size": 1729,
-   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/xpspawner.js"
+   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/xpspawner.js",
+   "loader": "eaglerforge",
+   "kind": "mod"
   },
   {
    "id": "talkback",
@@ -346,7 +390,9 @@
     "1.8.8"
    ],
    "size": 722,
-   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/talkback.js"
+   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/talkback.js",
+   "loader": "eaglerforge",
+   "kind": "mod"
   },
   {
    "id": "servermod",
@@ -360,7 +406,9 @@
     "1.8.8"
    ],
    "size": 10398,
-   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/servermod.js"
+   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/servermod.js",
+   "loader": "eaglerforge",
+   "kind": "mod"
   },
   {
    "id": "slippery",
@@ -374,7 +422,9 @@
     "1.8.8"
    ],
    "size": 47214,
-   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/slippery.js"
+   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/slippery.js",
+   "loader": "eaglerforge",
+   "kind": "mod"
   },
   {
    "id": "afk",
@@ -388,7 +438,9 @@
     "1.8.8"
    ],
    "size": 978,
-   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/afkmod.js"
+   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/afkmod.js",
+   "loader": "eaglerforge",
+   "kind": "mod"
   },
   {
    "id": "vclip",
@@ -402,7 +454,9 @@
     "1.8.8"
    ],
    "size": 1214,
-   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/vclip.js"
+   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/vclip.js",
+   "loader": "eaglerforge",
+   "kind": "mod"
   },
   {
    "id": "microphone",
@@ -418,7 +472,9 @@
     "1.8.8"
    ],
    "size": 226080,
-   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/microphone.js"
+   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/microphone.js",
+   "loader": "eaglerforge",
+   "kind": "mod"
   },
   {
    "id": "no_particles",
@@ -432,7 +488,9 @@
     "1.8.8"
    ],
    "size": 545,
-   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/no_particles.js"
+   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/no_particles.js",
+   "loader": "eaglerforge",
+   "kind": "mod"
   },
   {
    "id": "no_block_particles",
@@ -446,7 +504,9 @@
     "1.8.8"
    ],
    "size": 332,
-   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/no_block_particles.js"
+   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/no_block_particles.js",
+   "loader": "eaglerforge",
+   "kind": "mod"
   },
   {
    "id": "sliders",
@@ -460,7 +520,9 @@
     "1.8.8"
    ],
    "size": 2757,
-   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/sliders.js"
+   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/sliders.js",
+   "loader": "eaglerforge",
+   "kind": "mod"
   },
   {
    "id": "f11fix",
@@ -474,7 +536,9 @@
     "1.8.8"
    ],
    "size": 463,
-   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/f11fix.js"
+   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/f11fix.js",
+   "loader": "eaglerforge",
+   "kind": "mod"
   },
   {
    "id": "diamond_recipe_112",
@@ -488,7 +552,9 @@
     "1.12.2"
    ],
    "size": 1496,
-   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/diamondBlockCustomCraft_112.js"
+   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/diamondBlockCustomCraft_112.js",
+   "loader": "eaglerforge",
+   "kind": "mod"
   },
   {
    "id": "useless_item_112",
@@ -504,7 +570,9 @@
     "1.12.2"
    ],
    "size": 3252,
-   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/useless_item_example_mod_112.js"
+   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/useless_item_example_mod_112.js",
+   "loader": "eaglerforge",
+   "kind": "mod"
   },
   {
    "id": "custom_block_112",
@@ -520,7 +588,9 @@
     "1.12.2"
    ],
    "size": 6280,
-   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/custom_block_112.js"
+   "url": "https://raw.githubusercontent.com/EaglerForge/EaglerForgeInjector/cee455d7ecad5f88e2a7c6dd9905d56835059e21/examplemods/custom_block_112.js",
+   "loader": "eaglerforge",
+   "kind": "mod"
   }
  ]
 }

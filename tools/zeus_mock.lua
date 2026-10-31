@@ -1,4 +1,4 @@
--- Nachbau der Zeus-Lua-API (Eaglercraft 26.3, API 1) zum Testen der Mods außerhalb des Spiels.
+-- Nachbau der Zeus-Lua-API (Eaglercraft 26.2/26.3, API 1) zum Testen der Mods außerhalb des Spiels.
 -- Nur die Teile, die die Mods benutzen. Verhalten nach den eingebauten Beispiel-Mods des Clients.
 
 M = {

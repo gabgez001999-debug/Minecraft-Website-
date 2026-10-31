@@ -546,9 +546,9 @@ def build():
     (A / "items" / "wrench.json").write_text(json.dumps(
         {"model": {"type": "minecraft:model", "model": f"{NS}:item/wrench"}}, indent=1), encoding="utf-8")
     mcmeta = {"pack": {
-        "description": "Create-Port für Eaglercraft 26.3 – Modelle (inoffiziell)",
-        # 26.3 meldet resource_major 97 / resource_minor 1 (version.json im Client)
-        "min_format": 97, "max_format": 999,
+        "description": "Create-Port für Eaglercraft 26.2/26.3 – Modelle (inoffiziell)",
+        # version.json in den Clients: 26.2 = resource_major 88, 26.3 = 97.1
+        "min_format": 88, "max_format": 999,
     }}
     (OUT / "pack.mcmeta").write_text(json.dumps(mcmeta, indent=1, ensure_ascii=False), encoding="utf-8")
     pack_icon(OUT / "pack.png")

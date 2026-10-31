@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>EaglerForge Dashboard</title>
-<meta name="description" content="Instanzen anlegen, echte EaglerForge-Mods mit Abhängigkeiten herunterladen und Eaglercraft mit deinen Mods in einem neuen Tab starten.">
+<title>Eaglercraft Mod-Dashboard</title>
+<meta name="description" content="Instanzen für Eaglercraft 26.3, 26.2, 1.12.2 und 1.8.8 anlegen, Mods mit Abhängigkeiten herunterladen und mit deinen Mods in einem neuen Tab starten.">
 <link rel="icon" href="mods/create_zeus/icon.png">
 <style>
   /* Launcher-Layout: Topbar oben, Tabs links, Inhalt rechts, Spielen-Knopf unten rechts */
@@ -139,7 +139,7 @@
 <body>
 <div class="app">
   <header class="top">
-    <a class="brand" href="./"><img src="mods/create_zeus/icon.png" alt=""><span>Mod-Dashboard <small>EaglerForge</small></span></a>
+    <a class="brand" href="./"><img src="mods/create_zeus/icon.png" alt=""><span>Mod-Dashboard <small>Eaglercraft</small></span></a>
     <div class="spacer"></div>
     <button class="inst-chip" id="inst-btn" aria-haspopup="true" aria-expanded="false">
       <span class="nm" id="inst-name">–</span><span class="mt" id="inst-meta"></span><span aria-hidden="true">▾</span>
@@ -154,7 +154,7 @@
   </nav>
   <main id="main"></main>
 </div>
-<button class="play" id="play">▶ Spielen<small id="play-sub">EaglerForge</small></button>
+<button class="play" id="play">▶ Spielen<small id="play-sub">Eaglercraft</small></button>
 <div class="dlbar" id="dlbar" hidden><div id="dl-text">Lade herunter …</div><div class="bar"><div id="dl-fill"></div></div></div>
 <div id="modal-root"></div>
 <div id="toasts" aria-live="polite"></div>
@@ -164,14 +164,18 @@
 (function () {
   'use strict';
   // ------------------------------------------------------------------ Daten
+  // Zeus = eingebautes Lua-Mod-System der 26.x-Clients (26.2 und 26.3 sind derselbe Zeus-Stand)
   const LOADERS = [
-    { id: 'eaglerforge', name: 'EaglerForge', versions: ['1.8.8', '1.12.2'], note: 'JavaScript-Mods, läuft im Browser' },
+    { id: 'zeus', name: 'Zeus (Lua)', versions: ['26.3', '26.2'], note: 'Eingebautes Mod-System von Eaglercraft 26.x · Lua-Mods', ext: ['.zip', '.lua'] },
+    { id: 'eaglerforge', name: 'EaglerForge', versions: ['1.8.8', '1.12.2'], note: 'JavaScript-Mods für Eaglercraft 1.8.8 / 1.12.2', ext: ['.js'] },
   ];
+  const VERSIONS = LOADERS.flatMap((l) => l.versions);
+  const ZEUS_PLAY = 'https://eaglercraft.com/play?version=';
   const STORE = 'efdash.v1';
   const VIDEO = 'https://www.youtube.com/watch?v=XJq0q6dEqG4';
   const INJECTOR = 'https://eaglerforge.github.io/EaglerForgeInjector/';
   const DOWNLOADS = 'https://eaglercraft.com/downloads';
-  const CATS = ['Alle', 'Inhalt', 'Werkzeug', 'Befehle', 'Grafik', 'Spaß', 'Bibliothek', 'Trick'];
+  const CATS = ['Alle', 'Inhalt', 'Werkzeug', 'Befehle', 'Grafik', 'Spaß', 'Bibliothek', 'Ressourcenpaket', 'Trick'];
   const COLORS = ['#e0703a', '#3a8fe0', '#4fb36b', '#b35fd6', '#d6a23a', '#3ab8b0', '#d65f7d', '#7d8bd6'];
 
   let state = loadState();
@@ -192,6 +196,9 @@
   const $ = (sel, root) => (root || document).querySelector(sel);
   const cur = () => state.instances.find((i) => i.id === state.current) || state.instances[0] || null;
   const loaderOf = (id) => LOADERS.find((l) => l.id === id) || LOADERS[0];
+  const loaderForVersion = (v) => LOADERS.find((l) => l.versions.includes(v)) || LOADERS[0];
+  const fitsInst = (m, i) => !!m && m.loader === i.loader && m.versions.includes(i.version);
+  const asText = async (v) => (v == null ? null : typeof v === 'string' ? v : await v.text());
   const modById = (id) => catalog.find((m) => m.id === id);
   const kb = (n) => n > 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB';
   function color(id) { let h = 0; for (const c of id) h = (h * 31 + c.charCodeAt(0)) >>> 0; return COLORS[h % COLORS.length]; }
@@ -262,15 +269,26 @@
   }
 
   // ------------------------------------------------------------------ Instanzen
-  function loaderPicker(selected) {
+  function loaderPicker(version) {
+    const ok = loaderForVersion(version).id;
     return `<div class="field"><label>Mod-Loader</label><div class="loader-pick">${LOADERS.map((l) => `
-      <label class="loader-opt"><input type="radio" name="loader" value="${l.id}" ${l.id === selected ? 'checked' : ''}>
-      <span><b>${esc(l.name)}</b><br><small>${esc(l.note)}</small></span></label>`).join('')}</div></div>`;
+      <label class="loader-opt ${l.id === ok ? '' : 'off'}" data-loader="${l.id}"><input type="radio" name="loader" value="${l.id}" ${l.id === ok ? 'checked' : 'disabled'}>
+      <span><b>${esc(l.name)}</b> <small>· ${l.versions.join(' / ')}</small><br><small>${esc(l.note)}</small></span></label>`).join('')}</div></div>`;
   }
   function versionSelect(selected) {
-    const vs = LOADERS[0].versions;
-    return `<div class="field"><label for="f-ver">Minecraft-Version</label><select id="f-ver">${vs.map((v) =>
-      `<option value="${v}" ${v === selected ? 'selected' : ''}>Eaglercraft ${v}</option>`).join('')}</select></div>`;
+    return `<div class="field"><label for="f-ver">Minecraft-Version</label><select id="f-ver">${LOADERS.map((l) =>
+      `<optgroup label="${esc(l.name)}">${l.versions.map((v) => `<option value="${v}" ${v === selected ? 'selected' : ''}>Eaglercraft ${v}</option>`).join('')}</optgroup>`).join('')}</select></div>`;
+  }
+  // Version bestimmt den Loader: passender wird gewählt, die anderen ausgegraut
+  function syncLoaderPick(root) {
+    const ok = loaderForVersion($('#f-ver', root).value).id;
+    root.querySelectorAll('.loader-opt').forEach((o) => {
+      const on = o.dataset.loader === ok;
+      o.classList.toggle('off', !on);
+      const inp = $('input', o);
+      inp.disabled = !on;
+      inp.checked = on;
+    });
   }
   async function createInstanceDialog(required) {
     const r = await modal({
@@ -278,13 +296,14 @@
       dismissable: !required,
       html: `<p>Eine Instanz ist ein eigenes Minecraft mit eigener Version, eigenem Loader und eigenen Mods.</p>
         <div class="field"><label for="f-name">Name</label><input type="text" id="f-name" maxlength="40" placeholder="z. B. Meine Mod-Welt" value="${required ? 'Meine Mod-Welt' : ''}"></div>
-        ${versionSelect('1.8.8')}${loaderPicker('eaglerforge')}`,
+        ${versionSelect(VERSIONS[0])}${loaderPicker(VERSIONS[0])}`,
+      onOpen: (bg) => $('#f-ver', bg).addEventListener('change', () => syncLoaderPick(bg)),
       actions: [
         ...(required ? [] : [{ label: 'Abbrechen', value: null }]),
         { label: 'Erstellen', kind: 'primary',
           validate: (bg) => { const ok = $('#f-name', bg).value.trim().length > 0; if (!ok) $('#f-name', bg).focus(); return ok; },
           read: (bg) => ({ name: $('#f-name', bg).value.trim(), version: $('#f-ver', bg).value,
-            loader: (bg.querySelector('input[name=loader]:checked') || {}).value || 'eaglerforge' }) },
+            loader: loaderForVersion($('#f-ver', bg).value).id }) },
       ],
     });
     if (!r) return null;
@@ -302,7 +321,7 @@
     $('#inst-name').textContent = i ? i.name : 'Keine Instanz';
     $('#inst-meta').textContent = i ? loaderOf(i.loader).name + ' · ' + i.version : '';
     $('#mods-count').textContent = i ? i.mods.length : 0;
-    $('#play-sub').textContent = i ? i.name : 'EaglerForge';
+    $('#play-sub').textContent = i ? i.name : 'Eaglercraft';
   }
   function togglePop(force) {
     const pop = $('#inst-pop'), btn = $('#inst-btn');
@@ -320,7 +339,7 @@
       ${i ? `<h4>Aktuelle Instanz</h4>
       <div class="field"><label for="pop-name">Name</label><input type="text" id="pop-name" maxlength="40" value="${esc(i.name)}"></div>
       <div class="field"><label for="pop-loader">Mod-Loader</label><select id="pop-loader">${LOADERS.map((l) => `<option value="${l.id}" ${l.id === i.loader ? 'selected' : ''}>${esc(l.name)}</option>`).join('')}</select></div>
-      <div class="field"><label for="pop-ver">Minecraft-Version</label><select id="pop-ver">${loaderOf(i.loader).versions.map((v) => `<option ${v === i.version ? 'selected' : ''}>${v}</option>`).join('')}</select></div>
+      <div class="field"><label for="pop-ver">Minecraft-Version</label><select id="pop-ver">${LOADERS.map((l) => `<optgroup label="${esc(l.name)}">${l.versions.map((v) => `<option value="${v}" ${v === i.version ? 'selected' : ''}>${v}</option>`).join('')}</optgroup>`).join('')}</select></div>
       <div class="row"><button class="btn danger" id="pop-del">Instanz löschen</button></div>` : ''}`;
     pop.querySelectorAll('.inst-item').forEach((b) => b.addEventListener('click', () => {
       state.current = b.dataset.id; save(); render(); renderPop(); toast('Instanz gewechselt: ' + cur().name);
@@ -328,11 +347,21 @@
     $('#pop-new').addEventListener('click', () => { togglePop(false); createInstanceDialog(false); });
     if (!i) return;
     $('#pop-name').addEventListener('change', (e) => { i.name = e.target.value.trim() || i.name; save(); render(); });
-    $('#pop-loader').addEventListener('change', (e) => { i.loader = e.target.value; save(); render(); renderPop(); });
+    const changed = () => {
+      save(); render(); renderPop();
+      const bad = i.mods.filter((m) => (m.custom ? m.loader && m.loader !== i.loader : !fitsInst(modById(m.id), i)));
+      if (bad.length) toast(bad.length + ' Mod(s) passen nicht zu ' + loaderOf(i.loader).name + ' ' + i.version, true);
+    };
+    // Loader und Version hängen zusammen: 26.x = Zeus, 1.x = EaglerForge
+    $('#pop-loader').addEventListener('change', (e) => {
+      i.loader = e.target.value;
+      if (!loaderOf(i.loader).versions.includes(i.version)) i.version = loaderOf(i.loader).versions[0];
+      changed();
+    });
     $('#pop-ver').addEventListener('change', (e) => {
-      i.version = e.target.value; save(); render();
-      const bad = i.mods.filter((m) => !m.custom && modById(m.id) && !modById(m.id).versions.includes(i.version));
-      if (bad.length) toast(bad.length + ' Mod(s) passen nicht zu ' + i.version, true);
+      i.version = e.target.value;
+      i.loader = loaderForVersion(i.version).id;
+      changed();
     });
     $('#pop-del').addEventListener('click', async () => {
       const ok = await modal({ title: 'Instanz löschen?', html: `<p>„${esc(i.name)}“ und ihre Mod-Liste werden entfernt.</p>`,
@@ -382,7 +411,7 @@
     const res = await fetch(url);
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const total = Number(res.headers.get('content-length')) || 0;
-    if (!res.body || !res.body.getReader) { const t = await res.text(); onProgress(1); return t; }
+    if (!res.body || !res.body.getReader) { const b = await res.blob(); onProgress(1); return b; }
     const reader = res.body.getReader();
     const chunks = [];
     let got = 0;
@@ -393,7 +422,7 @@
       got += value.length;
       onProgress(total ? got / total : 0.5);
     }
-    return new TextDecoder().decode(await new Blob(chunks).arrayBuffer());
+    return new Blob(chunks);
   }
 
   async function download(i, ids) {
@@ -404,11 +433,11 @@
       const m = modById(id);
       if (!m || has(i, id)) { n++; continue; }
       try {
-        const code = await fetchWithProgress(m.url, (p) => {
+        const data = await fetchWithProgress(m.url, (p) => {
           text.textContent = `Lade ${m.title} herunter … (${n + 1}/${ids.length})`;
           fill.style.width = Math.round(((n + p) / ids.length) * 100) + '%';
         });
-        await idbPut('mod:' + id, code).catch(() => {});
+        await idbPut('mod:' + id, data).catch(() => {});
         i.mods.push({ id, title: m.title, added: Date.now() });
         save();
         toast(m.title + ' heruntergeladen');
@@ -439,21 +468,29 @@
 
   async function addCustom(file) {
     const i = cur();
-    if (!/\.js$/i.test(file.name)) { toast('Bitte eine .js-Datei (EaglerForge-Mod) wählen', true); return; }
+    const L = loaderOf(i.loader);
+    const ext = (file.name.match(/\.[^.]+$/) || [''])[0].toLowerCase();
+    if (!L.ext.includes(ext)) { toast('Für ' + L.name + ' bitte eine ' + L.ext.join('- oder ') + '-Datei wählen', true); return; }
     const id = 'custom-' + uid();
-    await idbPut('custom:' + i.id + ':' + id, await file.text());
-    i.mods.push({ id, title: file.name.replace(/\.js$/i, ''), custom: true, size: file.size, added: Date.now() });
+    await idbPut('custom:' + i.id + ':' + id, file);
+    i.mods.push({ id, title: file.name.slice(0, -ext.length), fileName: file.name, loader: i.loader, custom: true, size: file.size, added: Date.now() });
     save(); render();
     toast(file.name + ' hinzugefügt');
   }
 
-  async function saveFile(id) {
-    const i = cur();
+  const customName = (m) => m.fileName || m.title + '.js';
+  async function fileOf(i, id) {
     const m = i.mods.find((x) => x.id === id);
-    const code = m && m.custom ? await idbGet('custom:' + i.id + ':' + id) : await idbGet('mod:' + id);
-    const name = m && m.custom ? m.title + '.js' : (modById(id) || {}).file || id + '.js';
-    let blob = code ? new Blob([code], { type: 'text/javascript' }) : null;
-    if (!blob && modById(id)) blob = new Blob([await (await fetch(modById(id).url)).text()], { type: 'text/javascript' });
+    const stored = m && m.custom ? await idbGet('custom:' + i.id + ':' + id) : await idbGet('mod:' + id);
+    if (stored != null) return new Blob([stored]);
+    const c = modById(id);
+    return c ? await (await fetch(c.url)).blob() : null;
+  }
+  async function saveFile(id, inst) {
+    const i = inst || cur();
+    const m = i.mods.find((x) => x.id === id);
+    const name = m && m.custom ? customName(m) : (modById(id) || {}).file || id;
+    const blob = await fileOf(i, id);
     if (!blob) return;
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove();
@@ -464,10 +501,11 @@
     const i = cur();
     if (!i || !i.mods.length) { toast('Die Instanz hat noch keine Mods', true); return; }
     const zip = new JSZip();
-    const folder = zip.folder('mods');
     for (const m of i.mods) {
-      const code = m.custom ? await idbGet('custom:' + i.id + ':' + m.id) : (await idbGet('mod:' + m.id)) || await (await fetch(modById(m.id).url)).text();
-      folder.file(m.custom ? m.title + '.js' : modById(m.id).file, code || '');
+      const c = modById(m.id);
+      const blob = await fileOf(i, m.id);
+      if (!blob) continue;
+      zip.folder(c && c.kind === 'resourcepack' ? 'resourcepacks' : 'mods').file(m.custom ? customName(m) : c.file, blob);
     }
     zip.file('instanz.json', JSON.stringify({ name: i.name, loader: i.loader, version: i.version, mods: i.mods.map((m) => m.id) }, null, 1));
     const blob = await zip.generateAsync({ type: 'blob' });
@@ -479,14 +517,14 @@
   function orderedMods(i) {
     const order = [];
     const visit = (id) => { if (order.includes(id)) return; depsOf(id).forEach(visit); if (has(i, id)) order.push(id); };
-    i.mods.filter((m) => !m.custom).forEach((m) => visit(m.id));
+    i.mods.filter((m) => !m.custom && fitsInst(modById(m.id), i)).forEach((m) => visit(m.id));
     return order;
   }
   async function modUrls(i, forBlobPage) {
     const urls = orderedMods(i).map((id) => modById(id).url);
     if (forBlobPage) {
-      for (const m of i.mods.filter((x) => x.custom)) {
-        const code = await idbGet('custom:' + i.id + ':' + m.id);
+      for (const m of i.mods.filter((x) => x.custom && (x.loader || 'eaglerforge') === 'eaglerforge')) {
+        const code = await asText(await idbGet('custom:' + i.id + ':' + m.id));
         // data:-URL statt blob:, damit eigene Mods auch nach Schließen des Dashboards laden
         if (code) urls.push('data:text/javascript;charset=utf-8,' + encodeURIComponent(code));
       }
@@ -503,6 +541,7 @@
   async function play() {
     const i = cur();
     if (!i) { createInstanceDialog(true); return; }
+    if (i.loader === 'zeus') { playZeus(i); return; }
     const client = state.settings.clientStored ? true : false;
     const url = (state.settings.clientUrl || '').trim();
     if (!client && !url) { setupGuide(); return; }
@@ -528,6 +567,50 @@
       toast('Start fehlgeschlagen: ' + e.message, true);
     }
   }
+  // Zeus (26.x): Mods lassen sich nicht von außen vorladen, sie kommen über Hauptmenü → Mods → Importieren
+  // in den Client und bleiben dort gespeichert. Darum: neuer Tab + Import-Hilfe, solange sich die Mods ändern.
+  function playZeus(i) {
+    const url = ZEUS_PLAY + encodeURIComponent(i.version);
+    const win = window.open(url, '_blank');
+    if (win) { try { win.opener = null; } catch (e) { /* ignorieren */ } }
+    const list = i.mods.filter((m) => (m.custom ? m.loader === 'zeus' : fitsInst(modById(m.id), i)));
+    const sig = i.version + ':' + list.map((m) => m.id).sort().join(',');
+    i.lastPlayed = Date.now(); save();
+    if (!list.length || i.importedSig === sig) {
+      toast(win ? 'Eaglercraft ' + i.version + ' geöffnet' + (list.length ? ' – deine Mods sind schon importiert' : '') : 'Bitte Pop-ups für diese Seite erlauben', !win);
+      if (win) return;
+    }
+    const mods = list.filter((m) => m.custom || modById(m.id).kind !== 'resourcepack');
+    const packs = list.filter((m) => !m.custom && modById(m.id).kind === 'resourcepack');
+    const row = (m) => `<li class="li"><div class="grow"><b>${esc(m.custom ? customName(m) : modById(m.id).file)}</b><small>${esc(m.title)}</small></div><button class="btn" data-get="${m.id}">⤓ Speichern</button></li>`;
+    modal({
+      title: 'Mods in Eaglercraft ' + i.version + ' laden',
+      html: `<p>${win ? 'Eaglercraft ' + esc(i.version) + ' ist im neuen Tab offen.' : 'Der neue Tab wurde blockiert – unten kannst du ihn öffnen.'}
+          Zeus-Mods kommen über das Mods-Menü ins Spiel und bleiben danach dort gespeichert.</p>
+        <ol class="steps">
+          ${list.length ? '<li>Dateien speichern: <button class="btn" id="get-all">Alle speichern</button></li>' : ''}
+          ${mods.length ? `<li>Im Spiel: Hauptmenü → <b>Mods</b> → <b>Importieren</b> → die .zip-Dateien wählen (oder aufs Spielfenster ziehen).</li>` : ''}
+          ${packs.length ? `<li>Ressourcenpaket: Optionen → Ressourcenpakete → <b>„Import Pack…“</b> → Paket wählen und nach rechts schieben.</li>` : ''}
+          <li>Einzelspieler-Welt <b>mit Cheats</b> starten.</li>
+        </ol>
+        <ul class="list" style="list-style:none;margin:0;padding:0">${[...mods, ...packs].map(row).join('')}</ul>
+        <p>Hinweis: Zeus-Mods laufen nur im Einzelspieler, auf Servern und in LAN-Welten pausiert der Client sie.</p>`,
+      actions: [
+        { label: win ? 'Tab erneut öffnen' : 'Eaglercraft öffnen', value: 'open' },
+        { label: 'Erledigt, Mods sind importiert', kind: 'primary', value: 'done' },
+      ],
+      onOpen: (bg) => {
+        bg.querySelectorAll('[data-get]').forEach((b) => b.addEventListener('click', () => saveFile(b.dataset.get, i)));
+        if ($('#get-all', bg)) $('#get-all', bg).addEventListener('click', async () => {
+          for (const m of [...mods, ...packs]) { await saveFile(m.id, i); await new Promise((r) => setTimeout(r, 400)); }
+        });
+      },
+    }).then((v) => {
+      if (v === 'open') window.open(url, '_blank');
+      if (v === 'done') { i.importedSig = sig; save(); toast('Gemerkt: Beim nächsten Mal startet ' + i.name + ' direkt'); }
+    });
+  }
+
   function setupGuide() {
     modal({
       title: 'EaglerForge einrichten',
@@ -571,7 +654,8 @@
       actions: [{ label: 'Nein', value: false }, { label: 'Ja, Instanz erstellen', kind: 'primary', value: true }],
     });
     if (!ok) return true;
-    const inst = { id: uid(), name: data.n + ' (geteilt)', version: data.v || '1.8.8', loader: data.l || 'eaglerforge', mods: [], created: Date.now() };
+    const v = VERSIONS.includes(data.v) ? data.v : VERSIONS[0];
+    const inst = { id: uid(), name: (data.n || 'Welt') + ' (geteilt)', version: v, loader: loaderForVersion(v).id, mods: [], created: Date.now() };
     state.instances.push(inst); state.current = inst.id; save(); render();
     await download(inst, orderedFrom(want));
     return true;
@@ -594,27 +678,30 @@
   function viewMods(i) {
     const items = i.mods.map((m) => {
       const c = modById(m.id);
-      const fits = m.custom || !c || c.versions.includes(i.version);
+      const fits = m.custom ? (m.loader || 'eaglerforge') === i.loader : fitsInst(c, i);
       const deps = c ? c.dependencies.map((d) => (modById(d) || {}).title).filter(Boolean) : [];
       return `<div class="li">${avatar(m.id, m.title)}<div class="grow"><b>${esc(m.title)}</b>
-        <small>${m.custom ? 'Eigene Mod · ' + kb(m.size || 0) : esc(c ? c.author : '') + (deps.length ? ' · braucht ' + esc(deps.join(', ')) : '')}${fits ? '' : ' · <span style="color:var(--bad)">passt nicht zu ' + i.version + '</span>'}</small></div>
-        <button class="btn" data-save="${m.id}" title="Als .js speichern">⤓</button><button class="btn danger" data-rm="${m.id}">Entfernen</button></div>`;
+        <small>${m.custom ? 'Eigene Mod · ' + kb(m.size || 0) : esc(c ? c.author : '') + (c && c.kind === 'resourcepack' ? ' · Ressourcenpaket' : '') + (deps.length ? ' · braucht ' + esc(deps.join(', ')) : '')}${fits ? '' : ' · <span style="color:var(--bad)">passt nicht zu ' + esc(loaderOf(i.loader).name) + ' ' + i.version + '</span>'}</small></div>
+        <button class="btn" data-save="${m.id}" title="Datei speichern" aria-label="${esc(m.title)} speichern">⤓</button><button class="btn danger" data-rm="${m.id}">Entfernen</button></div>`;
     }).join('');
     return `<h1>Mods in „${esc(i.name)}“</h1><p class="sub">${esc(loaderOf(i.loader).name)} · Eaglercraft ${i.version} · ${i.mods.length} Mods</p>
       <div class="toolbar"><button class="btn primary" data-go="discover">Mods entdecken</button>
-        <label class="btn" for="custom-file">Eigene Mod (.js) hinzufügen</label><input type="file" id="custom-file" accept=".js" hidden>
+        <label class="btn" for="custom-file">Eigene Mod (${loaderOf(i.loader).ext.join(', ')}) hinzufügen</label><input type="file" id="custom-file" accept="${loaderOf(i.loader).ext.join(',')}" hidden>
         <button class="btn" id="export">Als .zip exportieren</button></div>
-      ${items ? `<div class="list">${items}</div>` : `<div class="empty">Noch keine Mods. Unter <b>Mods entdecken</b> findest du echte EaglerForge-Mods.</div>`}`;
+      ${items ? `<div class="list">${items}</div>` : `<div class="empty">Noch keine Mods. Unter <b>Mods entdecken</b> findest du ${i.loader === 'zeus' ? 'Lua-Mods für Eaglercraft 26.x' : 'echte EaglerForge-Mods'}.</div>`}`;
   }
 
   function viewDiscover(i) {
     const q = filter.q.toLowerCase();
-    const list = catalog.filter((m) => (filter.cat === 'Alle' || m.category === filter.cat) &&
+    const pool = catalog.filter((m) => m.loader === i.loader);
+    const cats = CATS.filter((c) => c === 'Alle' || pool.some((m) => m.category === c));
+    if (!cats.includes(filter.cat)) filter.cat = 'Alle';
+    const list = pool.filter((m) => (filter.cat === 'Alle' || m.category === filter.cat) &&
       (!q || (m.title + ' ' + m.description + ' ' + m.author).toLowerCase().includes(q)) &&
       (!filter.onlyFit || m.versions.includes(i.version)));
     const cards = list.map((m) => {
       const installed = has(i, m.id);
-      const fits = m.versions.includes(i.version);
+      const fits = fitsInst(m, i);
       const deps = m.dependencies.map((d) => modById(d).title);
       return `<article class="card"><div class="card-h">${avatar(m.id, m.title)}<div><b>${esc(m.title)}</b><small>von ${esc(m.author)}</small></div></div>
         <p>${esc(m.description)}</p>
@@ -623,24 +710,33 @@
         <div class="actions">${installed ? '<button class="btn" disabled>✓ Installiert</button>' :
           fits ? `<button class="btn primary" data-install="${m.id}">Herunterladen</button>` : `<button class="btn" disabled>Nur für ${m.versions.join(', ')}</button>`}</div></article>`;
     }).join('');
-    return `<h1>Mods entdecken</h1><p class="sub">${catalog.length} echte EaglerForge-Mods aus dem offiziellen Repository (MIT-Lizenz). Abhängigkeiten werden erkannt.</p>
+    const sub = i.loader === 'zeus'
+      ? `${pool.length} Lua-Mods und Pakete für Eaglercraft 26.2 und 26.3 (Zeus-Mod-System). Abhängigkeiten werden erkannt.`
+      : `${pool.length} echte EaglerForge-Mods aus dem offiziellen Repository (MIT-Lizenz). Abhängigkeiten werden erkannt.`;
+    return `<h1>Mods entdecken</h1><p class="sub">${sub}</p>
       <div class="toolbar"><input type="search" id="q" placeholder="Mods suchen …" value="${esc(filter.q)}" aria-label="Mods suchen">
         <label class="chip"><input type="checkbox" id="fit" ${filter.onlyFit ? 'checked' : ''}> nur für ${i.version}</label></div>
-      <div class="chips">${CATS.map((c) => `<button class="chip" data-cat="${c}" aria-pressed="${filter.cat === c}">${c}</button>`).join('')}</div>
+      <div class="chips">${cats.map((c) => `<button class="chip" data-cat="${c}" aria-pressed="${filter.cat === c}">${c}</button>`).join('')}</div>
       ${cards ? `<div class="grid">${cards}</div>` : '<div class="empty">Keine Mods gefunden.</div>'}`;
   }
 
   function viewMulti(i) {
     return `<h1>Mehrspieler</h1><p class="sub">Zusammen in einer geteilten Welt spielen – mit den gleichen Mods.</p>
       <div class="note"><b>So geht's in Eaglercraft:</b> Welt öffnen → Pause → <i>Open to LAN / Shared World</i> → den Code an Freunde schicken. Die joinen über Mehrspieler → <i>Join Shared World</i>.</div>
+      ${i.loader === 'zeus' ? '<div class="note warn"><b>Achtung bei 26.x:</b> Das Zeus-Mod-System pausiert Mods auf Servern und in LAN-Welten. Der Link sorgt dafür, dass alle dieselben Mods haben, in der geteilten Welt laufen sie aber nicht.</div>' : ''}
       <div class="card"><b>Deine Instanz teilen</b><p>Schick diesen Link zusammen mit dem Welt-Code. Wer andere Mods hat, bekommt beim Öffnen die Frage, ob eine neue Instanz mit allen Mods deiner Welt erstellt werden soll.</p>
         <div class="copy"><input type="text" id="share" readonly value="${esc(shareLink(i))}" aria-label="Einladungslink"><button class="btn primary" id="copy">Kopieren</button></div>
-        ${i.mods.some((m) => m.custom) ? '<p style="color:var(--bad)">Eigene .js-Mods werden nicht mitgeschickt.</p>' : ''}</div>`;
+        ${i.mods.some((m) => m.custom) ? '<p style="color:var(--bad)">Eigene Mods werden nicht mitgeschickt.</p>' : ''}</div>`;
   }
 
-  function viewSettings() {
+  function viewSettings(i) {
     const s = state.settings;
-    return `<h1>Einstellungen</h1><p class="sub">Hier verbindest du das Dashboard mit deinem EaglerForge-Client.</p>
+    return `<h1>Einstellungen</h1><p class="sub">Hier verbindest du das Dashboard mit deinen Eaglercraft-Clients.</p>
+      <div class="card" style="margin-bottom:12px"><b>Eaglercraft 26.3 / 26.2 (Zeus)</b>
+        <p>Keine Einrichtung nötig: „Spielen“ öffnet <a href="${ZEUS_PLAY}${esc(i.loader === 'zeus' ? i.version : '26.3')}" target="_blank" rel="noopener">eaglercraft.com/play?version=${esc(i.loader === 'zeus' ? i.version : '26.3')}</a> in einem neuen Tab.
+          Beim ersten Mal (und wenn sich deine Mods ändern) zeigt das Dashboard, wie du sie im Mods-Menü importierst.</p>
+        ${i.loader === 'zeus' && i.importedSig ? '<div class="row"><button class="btn" id="reimport">Import-Hilfe wieder anzeigen</button></div>' : ''}</div>
+      <h4 style="margin:18px 0 8px;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">EaglerForge (1.8.8 / 1.12.2)</h4>
       <div class="note warn">Das Dashboard liefert selbst kein Minecraft aus. Du lädst einmal <b>deinen eigenen</b> EaglerForge-Client hoch; er bleibt nur in deinem Browser.</div>
       <div class="card"><b>EaglerForge-Client (empfohlen)</b>
         <p>${s.clientStored ? '✓ Gespeichert: ' + esc(s.clientName || 'processed.html') + ' (' + kb(s.clientSize || 0) + ')' : 'Noch kein Client hochgeladen.'}</p>
@@ -660,7 +756,9 @@
     const i = cur();
     const main = $('#main');
     if (!i) { main.innerHTML = '<div class="empty">Erstelle zuerst eine Instanz.</div>'; return; }
-    main.innerHTML = tab === 'mods' ? viewMods(i) : tab === 'discover' ? viewDiscover(i) : tab === 'multi' ? viewMulti(i) : viewSettings();
+    main.innerHTML = tab === 'mods' ? viewMods(i) : tab === 'discover' ? viewDiscover(i) : tab === 'multi' ? viewMulti(i) : viewSettings(i);
+    const ri = $('#reimport', main);
+    if (ri) ri.addEventListener('click', () => { delete i.importedSig; save(); renderMain(); toast('Beim nächsten „Spielen“ kommt die Import-Hilfe wieder'); });
     main.querySelectorAll('[data-go]').forEach((b) => b.addEventListener('click', () => setTab(b.dataset.go)));
     main.querySelectorAll('[data-install]').forEach((b) => b.addEventListener('click', () => install(b.dataset.install)));
     main.querySelectorAll('[data-rm]').forEach((b) => b.addEventListener('click', () => removeMod(b.dataset.rm)));
@@ -718,12 +816,11 @@
 
   (async function start() {
     render();
-    try {
-      const r = await fetch('dashboard/eaglerforge-mods.json');
-      catalog = (await r.json()).mods;
-    } catch (e) {
-      toast('Mod-Katalog konnte nicht geladen werden', true);
-    }
+    const load = (url, loader) => fetch(url).then((r) => r.json())
+      .then((j) => j.mods.map((m) => Object.assign({ loader, kind: 'mod' }, m)))
+      .catch(() => { toast('Mod-Katalog (' + loaderOf(loader).name + ') konnte nicht geladen werden', true); return []; });
+    const [zeus, ef] = await Promise.all([load('dashboard/zeus-mods.json', 'zeus'), load('dashboard/eaglerforge-mods.json', 'eaglerforge')]);
+    catalog = [...zeus, ...ef];
     render();
     const joined = await handleJoin();
     if (!joined && !state.instances.length) createInstanceDialog(true);

@@ -64,7 +64,8 @@ def main(repo):
             assert d in MODS, d
         mods.append({"id": mid, "file": file, "title": title, "description": desc, "author": author,
                      "category": cat, "dependencies": deps, "versions": versions,
-                     "size": path.stat().st_size, "url": base + file})
+                     "size": path.stat().st_size, "url": base + file,
+                     "loader": "eaglerforge", "kind": "mod"})
     OUT.parent.mkdir(exist_ok=True)
     OUT.write_text(json.dumps({
         "source": "https://github.com/EaglerForge/EaglerForgeInjector",

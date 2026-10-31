@@ -5,6 +5,7 @@ Für jede Mod in mods/<id>/ entsteht (plus dist/create_zeus_resources.zip, das R
   dist/<id>.lua   Einzeldatei-Variante (Kopfkommentare -- name/id/version reichen dem Client)
 
 Icons (64x64, vom Client verlangt) werden hier gezeichnet, falls sie fehlen.
+Zusätzlich: dashboard/zeus-mods.json, der Katalog für das Mod-Dashboard (Loader „Zeus“, 26.2/26.3).
 Aufruf: python tools/build.py
 """
 import json
@@ -89,6 +90,37 @@ def build_resourcepack():
     print(f"{out.relative_to(ROOT)}  ({out.stat().st_size} Bytes)")
 
 
+# Katalog fürs Dashboard: id -> (titel, kurzbeschreibung, kategorie, abhängigkeiten, art)
+ZEUS_VERSIONS = ["26.3", "26.2"]
+ZEUS_CATALOG = {
+    "create_zeus": ("Create (Eaglercraft-Port)", "Wellen, Zahnräder, Motoren und Maschinen mit drehenden 3D-Modellen, "
+                    "B-Menü mit 6 Addons und Stress-System. Welt mit Cheats nötig.", "Inhalt", ["create_zeus_resources"], "mod"),
+    "create_zeus_resources": ("Create-Ressourcenpaket", "Die 3D-Modelle für Create. Kommt unter Optionen → Ressourcenpakete "
+                              "→ „Import Pack…“ rein, nicht ins Mods-Menü.", "Ressourcenpaket", [], "resourcepack"),
+    "mc_device_zeus": ("MC-Device (Handy)", "Handy mit GPS, Wegpunkten, Uhr, Wetter, Rechner, Notizen, Musik, "
+                       "Taschenlampe und Laptop für Create-Anlagen.", "Werkzeug", [], "mod"),
+}
+
+
+def build_zeus_catalog():
+    mods = []
+    for mid, (title, desc, cat, deps, kind) in ZEUS_CATALOG.items():
+        f = DIST / f"{mid}.zip"
+        assert f.exists(), f
+        meta_file = MODS / mid / "metadata.json"
+        meta = json.loads(meta_file.read_text(encoding="utf-8")) if meta_file.exists() else {}
+        mods.append({"id": mid, "file": f.name, "title": title, "description": desc,
+                     "author": ", ".join(meta.get("authors", ["Larpbase"])), "category": cat, "dependencies": deps,
+                     "versions": ZEUS_VERSIONS, "size": f.stat().st_size, "url": f"dist/{f.name}",
+                     "loader": "zeus", "kind": kind, "version": meta.get("version", "")})
+    out = ROOT / "dashboard" / "zeus-mods.json"
+    out.parent.mkdir(exist_ok=True)
+    out.write_text(json.dumps({"source": "https://github.com/gabgez001999-debug/Minecraft-Website-",
+                               "license": "MIT", "mods": mods}, indent=1, ensure_ascii=False), encoding="utf-8")
+    print(f"{out.relative_to(ROOT)}: {len(mods)} Einträge")
+
+
 if __name__ == "__main__":
     build()
     build_resourcepack()
+    build_zeus_catalog()
