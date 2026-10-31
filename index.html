@@ -105,7 +105,7 @@
     <div class="eyebrow">
       <span class="chip brass">Eaglercraft 26.3</span>
       <span class="chip">Zeus-Lua · API 1</span>
-      <span class="chip">v0.3 · inoffiziell</span>
+      <span class="chip">v0.4 · inoffiziell</span>
     </div>
     <h1>Create<br><span>für Eaglercraft 26.3</span></h1>
     <p class="lead">Wellen, Zahnräder, Motoren und Maschinen mit drehenden 3D-Modellen, Teile im Inventar zum Setzen per Rechtsklick,
@@ -128,11 +128,11 @@
           <img src="mods/create_zeus/icon.png" alt="" width="64" height="64">
           <div>
             <h3>Create (Eaglercraft-Port)</h3>
-            <div class="meta">create_zeus · v0.3.0 · Mod für das Mods-Menü</div>
+            <div class="meta">create_zeus · v0.4.0 · Mod für das Mods-Menü</div>
           </div>
         </div>
         <ul class="feat">
-          <li>22 Bauteile plus Schraubenschlüssel, alle als Items im Inventar</li>
+          <li>30 Bauteile plus Schraubenschlüssel · Rechtsklick setzt, Linksklick baut ab</li>
           <li>Drehende 3D-Modelle, Zahnräder greifen sichtbar ineinander</li>
           <li>B-Menü mit 6 Addons, Abhängigkeiten und Installation mit Fortschrittsbalken</li>
           <li>Drehzahl, Übersetzung, Stress und Überlastung wie in Create</li>
@@ -146,7 +146,7 @@
           <img src="resourcepack/pack.png" alt="" width="64" height="64">
           <div>
             <h3>Ressourcenpaket</h3>
-            <div class="meta">create_zeus_resources · 25 Modelle · nötig für die 3D-Modelle</div>
+            <div class="meta">create_zeus_resources · 35 Modelle · nötig für die 3D-Modelle</div>
           </div>
         </div>
         <ul class="feat">
@@ -198,7 +198,7 @@
       <label for="conv-file"><strong>Create-Jar auswählen</strong></label>
       <input id="conv-file" type="file" accept=".jar,.zip">
       <div class="progress" aria-hidden="true"><div id="conv-bar"></div></div>
-      <div id="conv-status" role="status">Getestet mit Create 6.0.10: 29 von 30 Modellen werden die Originale, nur das Wasserrad bleibt aus dem Port-Paket.</div>
+      <div id="conv-status" role="status">Getestet mit Create 6.0.10: 43 Modelle werden die Originale, nur Wasserrad und Brechrad bleiben aus dem Port-Paket (Create nutzt dafür OBJ-Modelle).</div>
       <div><a id="conv-download" class="btn primary" hidden download="create_zeus_original_modelle.zip">Paket herunterladen</a></div>
     </div>
   </section>
@@ -212,6 +212,7 @@
           <tbody>
             <tr><td><kbd>B</kbd></td><td>Create-Menü öffnen und wieder schließen</td></tr>
             <tr><td>Rechtsklick mit Teil</td><td>Teil an die angeschaute Blockseite setzen</td></tr>
+            <tr><td>Linksklick auf ein Teil</td><td>Abbauen, es kommt zurück ins Inventar</td></tr>
             <tr><td>Rechtsklick mit Schraubenschlüssel</td><td>Teil drehen, Motor einstellen</td></tr>
             <tr><td>Schleichen + Rechtsklick (Schlüssel)</td><td>Teil aufheben, es kommt zurück ins Inventar</td></tr>
             <tr><td>Rechte Maustaste halten / <kbd>G</kbd></td><td>Handkurbel drehen (schleichen = rückwärts)</td></tr>
@@ -260,10 +261,17 @@
           <tr><td>Welle</td><td>Leitet Drehung entlang ihrer Achse weiter</td><td class="su">–</td></tr>
           <tr><td>Zahnrad / Großes Zahnrad</td><td>Kleine nebeneinander drehen gegenläufig; groß ↔ klein diagonal = 2:1</td><td class="su">–</td></tr>
           <tr><td>Getriebe</td><td>Lenkt Drehung auf die vier Seiten um</td><td class="su">–</td></tr>
+          <tr><td>Gehäuste Welle</td><td>Welle im Andesit-Gehäuse</td><td class="su">–</td></tr>
+          <tr><td>Kupplung</td><td>Mit Redstone-Signal wird die Drehung getrennt</td><td class="su">–</td></tr>
+          <tr><td>Gangschaltung</td><td>Mit Redstone-Signal dreht die Ausgangsseite andersherum</td><td class="su">–</td></tr>
+          <tr><td>Kettenantrieb</td><td>Nebeneinander gesetzte Kettenantriebe drehen gleich schnell</td><td class="su">–</td></tr>
           <tr><td>Handkurbel</td><td>32 RPM, solange du kurbelst</td><td class="su">+256 SU</td></tr>
-          <tr><td>Wasserrad</td><td>Dauerhaft 8 RPM</td><td class="su">+256 SU</td></tr>
+          <tr><td>Wasserrad</td><td>8 RPM, wenn Wasser seitlich ans Rad fließt</td><td class="su">+256 SU</td></tr>
+          <tr><td>Windmühlenlager + Segel</td><td>Ab 8 Segeln in der Nähe; je 2 Segel 1 RPM, bis 16 RPM</td><td class="su">+32 SU/RPM</td></tr>
           <tr><td>Kreativmotor</td><td>1–256 RPM einstellbar</td><td class="su">+16384 SU</td></tr>
           <tr><td>Mechanischer Bohrer</td><td>Baut den Block vor sich ab</td><td class="su">4 SU/RPM</td></tr>
+          <tr><td>Mechanische Säge</td><td>Fällt Bäume vor sich, sägt Stämme zu je 6 Brettern</td><td class="su">4 SU/RPM</td></tr>
+          <tr><td>Brechräder (Paar)</td><td>Zwei gegenläufige Räder mit einem Block Lücke; Erz → 2 Rohmetall, Bruchstein → Kies</td><td class="su">8 SU/RPM</td></tr>
           <tr><td>Lüfter</td><td>Bläst; vor Lava/Feuer schmelzen, vor Wasser waschen, vor Seelenfeuer verfluchen</td><td class="su">2 SU/RPM</td></tr>
           <tr><td>Mechanische Presse</td><td>Presst Items unter sich (Zuckerrohr → Papier, Eis → Packeis)</td><td class="su">8 SU/RPM</td></tr>
           <tr><td>Mahlstein</td><td>Mahlt Items auf sich (Bruchstein → Kies → Sand, Blumen → Farbstoff)</td><td class="su">4 SU/RPM</td></tr>

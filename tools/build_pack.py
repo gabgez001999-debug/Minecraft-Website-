@@ -228,7 +228,53 @@ def tex_xp():
     return img
 
 
+def tex_accent(color, seed):
+    img = tex_casing()
+    d = ImageDraw.Draw(img)
+    d.rectangle((3, 6, 12, 9), fill=color)
+    d.rectangle((6, 3, 9, 12), fill=shade(color, 0.8))
+    return img
+
+
+def tex_chain():
+    img = tex_casing()
+    d = ImageDraw.Draw(img)
+    for y in range(3, 13, 3):
+        d.rectangle((6, y, 9, y + 1), fill=(90, 92, 98, 255))
+        d.point((7, y + 2), fill=(60, 62, 66, 255))
+    return img
+
+
+def tex_blade():
+    img = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    d.ellipse((0, 0, 15, 15), fill=(196, 198, 204, 255), outline=(120, 122, 128, 255))
+    for i in range(8):
+        a = math.pi * 2 * i / 8
+        d.line((8, 8, 8 + 7 * math.cos(a), 8 + 7 * math.sin(a)), fill=(150, 152, 158, 255))
+    d.ellipse((6, 6, 9, 9), fill=(90, 92, 98, 255))
+    return img
+
+
+def tex_crush():
+    img = Image.new("RGBA", (16, 16))
+    noise_fill(img, (110, 108, 104), 0.12, 41)
+    d = ImageDraw.Draw(img)
+    for x in range(0, 16, 4):
+        d.line((x, 0, x, 15), fill=(80, 78, 75, 255))
+    return img
+
+
+def tex_wood_top():
+    img = tex_wood((168, 128, 78), 42)
+    d = ImageDraw.Draw(img)
+    d.ellipse((5, 5, 10, 10), fill=(120, 120, 116, 255))
+    return img
+
+
 TEXTURES = {
+    "block/clutch": lambda: tex_accent((200, 50, 40, 255), 43), "block/gearshift": lambda: tex_accent((60, 120, 210, 255), 44),
+    "block/chain": tex_chain, "block/saw_blade": tex_blade, "block/crush": tex_crush, "block/bearing_wood": tex_wood_top,
     "block/solar": tex_solar, "block/enchant": tex_enchant, "block/xp": tex_xp,
     "block/fan_grill": tex_grill, "block/copper_coil": tex_copper, "block/cannon": tex_cannon, "block/sail": tex_sail,
     "block/axis": tex_axis, "block/axis_top": tex_axis_top,
@@ -403,6 +449,40 @@ MODELS.update({
         box([1, 0, 1], [15, 2, 15], "casing"), box([1, 12, 1], [15, 14, 15], "casing"),
         box([6, 14, 6], [10, 16, 10], "brass"),
     ]),
+    # weitere Create-Kernblöcke (Achse Y; Gehäuse mit Wellenenden oben/unten)
+    "d_encased": model({"casing": "andesite_casing", "end": "axis_top"}, [
+        box([0, 0.01, 0], [16, 15.99, 16], "casing"),
+        box([6, 0, 6], [10, 16, 10], "end", uv_full=True),
+    ]),
+    "d_clutch": model({"casing": "clutch", "end": "axis_top"}, [
+        box([-0.02, -0.02, -0.02], [16.02, 16.02, 16.02], "casing"),
+    ]),
+    "d_gearshift": model({"casing": "gearshift"}, [
+        box([-0.02, -0.02, -0.02], [16.02, 16.02, 16.02], "casing"),
+    ]),
+    "d_chain": model({"casing": "chain"}, [box([0, 0, 0], [16, 16, 16], "casing")]),
+    "d_saw_c": model({"casing": "andesite_casing", "top": "saw_blade"}, [
+        box([0, 0, 0], [16, 10, 16], "casing"),
+    ]),
+    "d_saw_blade": model({"blade": "saw_blade", **AX}, [
+        box([6, 0, 6], [10, 6, 10], "axis", end_tex="axis_top"),
+        box([0, 6, 0], [16, 7, 16], "blade"),
+        box([0, 6, 0], [16, 7, 16], "blade", rot=45),
+    ]),
+    "d_crush": model({"stone": "crush", **AX}, [
+        SHAFT,
+        *[box([-4, 2, -4], [20, 14, 20], "stone", rot=a) for a in (0, 22.5, 45, -22.5)],
+    ], display=scaled_display(0.5)),
+    "d_wbearing": model({"casing": "andesite_casing", "top": "bearing_wood"}, [
+        box([0, 0, 0], [16, 12, 16], "casing"), box([1, 12, 1], [15, 16, 15], "top"),
+    ]),
+    "d_windmill": model({"sail": "sail", "wood": "water_wheel", **AX}, [
+        box([6, 0, 6], [10, 6, 10], "axis", end_tex="axis_top"),
+        box([-16, 5, 7], [32, 6, 9], "wood"), box([7, 5, -16], [9, 6, 32], "wood"),
+        box([-15, 6, 4], [3, 6.5, 12], "sail"), box([13, 6, 4], [31, 6.5, 12], "sail"),
+        box([4, 6, -15], [12, 6.5, 3], "sail"), box([4, 6, 13], [12, 6.5, 31], "sail"),
+    ], display=scaled_display(0.3)),
+    "d_sail": model({"sail": "sail"}, [box([0, 7, 0], [16, 9, 16], "sail")]),
 })
 
 # Item-Definitionen: Name -> Liste von Modellen (mehrere = composite)
@@ -418,6 +498,9 @@ ITEMS = {
     "millstone": ["d_mill_b", "d_mill_i"], "speedometer": ["d_gauge"], "stressometer": ["d_gauge"],
     "cannon": ["d_cannon"], "alternator": ["d_alt"], "electric_motor": ["d_emotor"],
     "propeller_bearing": ["d_bearing", "d_bprop"],
+    "encased_shaft": ["d_encased"], "clutch": ["d_clutch"], "gearshift": ["d_gearshift"], "chain_drive": ["d_chain"],
+    "mechanical_saw": ["d_saw_c", "d_saw_blade"], "crushing_wheel": ["d_crush"], "windmill_bearing": ["d_wbearing", "d_windmill"],
+    "sail": ["d_sail"],
     "enchanter": ["d_enchanter"], "xp_drain": ["d_xp_drain"], "solar_panel": ["d_solar"], "battery": ["d_battery"],
 }
 

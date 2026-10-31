@@ -422,6 +422,115 @@ def test_create_menu_addons():
 
 
 # ---------------------------------------------------------------------------
+def test_create_core_blocks():
+    print("Create-Port: neue Kernblöcke, Linksklick, Redstone, Wasser")
+    lua = runtime("create_zeus")
+    M = lua.globals().M
+    lua.execute('M.px, M.py, M.pz = 10, 85, 5')
+    M.fire("world_join")
+    M.ticks(12)
+    def speed_at(x, y, z):
+        out = hud_at(lua, x, y, z)
+        for line in out.split("\n"):
+            if line.startswith("Drehzahl:"):
+                return line
+        return out
+
+    # Kupplung: Redstone trennt
+    hit(lua, -1, 80, 0, "east"); M.runCommand("create", "setzen", "motor")        # (0,80,0)
+    hit(lua, 0, 80, 0, "east"); M.runCommand("create", "setzen", "kupplung")       # (1,80,0)
+    hit(lua, 1, 80, 0, "east"); M.runCommand("create", "setzen", "welle")          # (2,80,0)
+    M.ticks(25)
+    check("64 RPM" in speed_at(2, 80, 0), "Kupplung ohne Redstone leitet weiter")
+    check(any(c.startswith("setblock 1 80 0 minecraft:redstone_lamp keep") for c in sent(lua)), "Kupplung nutzt eine Redstone-Lampe als Sensor")
+    lua.execute('M.world["1,80,0"] = "minecraft:redstone_lamp[lit=true]"')
+    M.ticks(30)
+    check("0 RPM" in speed_at(2, 80, 0), "Kupplung mit Redstone trennt die Drehung")
+    check(not any("czq" in c for c in lua_list(M.chatlog)), "Abfrage-Antworten erscheinen nicht im Chat")
+    lua.execute('M.world["1,80,0"] = nil')
+    M.ticks(30)
+    check("64 RPM" in speed_at(2, 80, 0), "Redstone aus: wieder verbunden")
+
+    # Gangschaltung: Redstone dreht die Richtung um
+    hit(lua, -1, 82, 0, "east"); M.runCommand("create", "setzen", "motor")
+    hit(lua, 0, 82, 0, "east"); M.runCommand("create", "setzen", "gangschaltung")
+    hit(lua, 1, 82, 0, "east"); M.runCommand("create", "setzen", "welle")
+    M.ticks(25)
+    before = speed_at(2, 82, 0)
+    lua.execute('M.world["1,82,0"] = "minecraft:redstone_lamp[lit=true]"')
+    M.ticks(30)
+    after = speed_at(2, 82, 0)
+    check("64 RPM" in after and before[-1] != after[-1], f"Gangschaltung kehrt die Richtung um ({before[-1]} → {after[-1]})")
+
+    # Kettenantrieb: nebeneinander gleich schnell
+    hit(lua, -1, 84, 0, "east"); M.runCommand("create", "setzen", "motor")          # (0,84,0)
+    hit(lua, 0, 84, 0, "east"); M.runCommand("create", "setzen", "kette")            # (1,84,0)
+    hit(lua, 0, 84, 1, "east"); M.runCommand("create", "setzen", "kette")            # (1,84,1)
+    hit(lua, 1, 84, 1, "east"); M.runCommand("create", "setzen", "welle")            # (2,84,1)
+    M.ticks(5)
+    check("64 RPM" in speed_at(2, 84, 1), "Kettenantriebe übertragen seitlich")
+
+    # Windmühle: braucht mindestens 8 Segel
+    hit(lua, 10, 89, 10, "up"); M.runCommand("create", "setzen", "windmuehle")       # (10,90,10) nach oben
+    for i in range(6):
+        hit(lua, 12 + i % 3, 89, 9 + i // 3, "up"); M.runCommand("create", "setzen", "segel")
+    M.ticks(12)
+    out = hud_at(lua, 10, 90, 10)
+    check("0 RPM" in out and "mindestens 8" in out, "6 Segel: Windmühle steht")
+    for i in range(6):
+        hit(lua, 12 + i % 3, 89, 11 + i // 3, "up"); M.runCommand("create", "setzen", "segel")
+    M.ticks(12)
+    check("6 RPM" in hud_at(lua, 10, 90, 10), "12 Segel: Windmühle dreht mit 6 RPM")
+
+    # Wasserrad: braucht Wasser
+    hit(lua, 19, 86, 10, "east"); M.runCommand("create", "setzen", "wasserrad")      # (20,86,10) Achse x
+    M.ticks(30)
+    out = hud_at(lua, 20, 86, 10)
+    check("0 RPM" in out and "Kein Wasser" in out, "Wasserrad ohne Wasser steht")
+    lua.execute('M.world["20,87,10"] = "minecraft:water"')
+    M.ticks(30)
+    check("8 RPM" in speed_at(20, 86, 10), "Wasserrad mit Wasser dreht (8 RPM)")
+
+    # Brechräder: Paar mit Lücke, gegenläufig
+    hit(lua, 29, 88, 0, "east"); M.runCommand("create", "setzen", "motor")           # (30,88,0)
+    hit(lua, 30, 88, 0, "east"); M.runCommand("create", "setzen", "brechrad")        # (31,88,0)
+    hit(lua, 29, 88, 2, "east"); M.runCommand("create", "setzen", "motor")           # (30,88,2)
+    hit(lua, 30, 88, 2, "up"); M.runCommand("create", "motor", "-64")
+    hit(lua, 30, 88, 2, "east"); M.runCommand("create", "setzen", "brechrad")        # (31,88,2)
+    before = len(sent(lua))
+    M.ticks(40)
+    new = sent(lua)[before:]
+    check(any('positioned 31.50 88.50 1.50' in c and '"minecraft:raw_iron",count:2' in c for c in new),
+          "Brechräder zerkleinern Erz in der Lücke (Eisenerz → 2 Roheisen)")
+    check(any("Item.count 0.999" in c for c in new), "Stapel werden Stück für Stück verarbeitet")
+
+    # Säge: fällt Bäume und sägt Stämme
+    lua.execute('M.facing = "east"')
+    hit(lua, 39, 90, 0, "east"); M.runCommand("create", "setzen", "motor")           # (40,90,0)
+    hit(lua, 40, 90, 0, "east"); M.runCommand("create", "setzen", "saege")           # (41,90,0) Blick Osten
+    before = len(sent(lua))
+    M.ticks(40)
+    new = sent(lua)[before:]
+    check(any(c == "execute if block 42 95 0 #minecraft:logs run setblock 42 95 0 air destroy" for c in new), "Säge fällt den ganzen Baumstamm")
+    check(any('"minecraft:oak_planks",count:6' in c for c in new), "Säge macht aus einem Stamm 6 Bretter")
+
+    # Linksklick baut ab und gibt das Teil zurück
+    hit(lua, 2, 84, 1, "up")
+    lua.execute('M.mouseDown.left = true')
+    M.ticks(2)
+    lua.execute('M.mouseDown.left = false')
+    M.ticks(1)
+    cmds = sent(lua)
+    check(any(c.startswith("setblock 2 84 1 air") for c in cmds) and any(c.startswith("give @s minecraft:breeze_rod") and c.endswith(" 1") for c in cmds),
+          "Linksklick baut die Welle ab und legt sie ins Inventar")
+    check(any(c.startswith("summon item_display") and 'd_windmill' in c and "scale:[2f,2f,2f]" in c for c in cmds), "Windmühlen-Segel doppelt so groß")
+    too_long = [c for c in cmds if len(c) > 256]
+    check(not too_long, f"alle Befehle <= 256 Zeichen (längster: {max(len(c) for c in cmds)})")
+    errs = [l for l in lua_list(M.logs) if "fehlgeschlagen" in l]
+    check(not errs, "keine API-Fehler im Log " + (str(errs[:2]) if errs else ""))
+
+
+# ---------------------------------------------------------------------------
 def test_device():
     print("MC-Device-Port")
     lua = runtime("mc_device_zeus")
@@ -465,6 +574,7 @@ def test_device():
 if __name__ == "__main__":
     test_create()
     test_create_menu_addons()
+    test_create_core_blocks()
     test_device()
     print()
     if failures:

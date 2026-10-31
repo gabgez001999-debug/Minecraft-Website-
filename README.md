@@ -5,8 +5,8 @@ Zwei inoffizielle Mods für den **Eaglercraft-26.3-Client** mit seinem eingebaut
 
 | Mod | Datei | Inhalt |
 |-----|-------|--------|
-| **Create (Eaglercraft-Port)** v0.3 | [`dist/create_zeus.zip`](dist/create_zeus.zip) | 22 Bauteile als Items, drehende 3D-Modelle, Rechtsklick-Platzierung, Schraubenschlüssel, B-Menü mit 6 Addons (Kanonen, Elektrik, Aeronautik, Dragons Plus, Verzauberungsindustrie, Kraftwerk) samt Abhängigkeiten, Stress-System, Ingenieursbrille |
-| **Ressourcenpaket** | [`dist/create_zeus_resources.zip`](dist/create_zeus_resources.zip) | 25 eigene 3D-Modelle im Create-Stil ([Vorschau](vorschau.html)) – oder per Konverter die Original-Modelle aus deiner eigenen Create-Jar |
+| **Create (Eaglercraft-Port)** v0.4 | [`dist/create_zeus.zip`](dist/create_zeus.zip) | 30 Bauteile als Items (Kupplung, Gangschaltung, Kettenantrieb, Säge, Brechräder, Windmühle …), Linksklick abbauen, drehende 3D-Modelle, Rechtsklick-Platzierung, Schraubenschlüssel, B-Menü mit 6 Addons (Kanonen, Elektrik, Aeronautik, Dragons Plus, Verzauberungsindustrie, Kraftwerk) samt Abhängigkeiten, Stress-System, Ingenieursbrille |
+| **Ressourcenpaket** | [`dist/create_zeus_resources.zip`](dist/create_zeus_resources.zip) | 35 eigene 3D-Modelle im Create-Stil ([Vorschau](vorschau.html)) – oder per Konverter die Original-Modelle aus deiner eigenen Create-Jar |
 | **MC-Device (Eaglercraft-Port)** | [`dist/mc_device_zeus.zip`](dist/mc_device_zeus.zip) | Handy mit GPS/Wegpunkten, Uhr/Wecker, Wetter, Rechner, Notizen, Musik, Status, Taschenlampe, Staubsauger, Laptop für Create-Anlagen |
 
 ## Installation
@@ -22,8 +22,8 @@ Zwei inoffizielle Mods für den **Eaglercraft-26.3-Client** mit seinem eingebaut
 
 Create-Assets sind „All Rights Reserved“ und liegen deshalb nicht in diesem Repo. Die Webseite (Abschnitt
 „Original-Create-Modelle“) oder `python tools/convert_create.py <create.jar>` baut aus deiner eigenen Create-Jar lokal
-ein Ressourcenpaket mit den Originalmodellen. Getestet mit Create 6.0.10: 29 von 30 Modellen werden ersetzt
-(nur das Wasserrad bleibt, weil Create dafür einen OBJ-Loader nutzt). Zuordnung: [`converter/create_mapping.json`](converter/create_mapping.json).
+ein Ressourcenpaket mit den Originalmodellen. Getestet mit Create 6.0.10: 43 Modelle werden ersetzt
+(Wasserrad und Brechrad bleiben, weil Create dafür OBJ-Modelle nutzt). Zuordnung: [`converter/create_mapping.json`](converter/create_mapping.json).
 
 ## Wie das funktioniert
 

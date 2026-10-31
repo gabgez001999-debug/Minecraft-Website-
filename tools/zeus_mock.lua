@@ -31,9 +31,26 @@ print = log
 
 function notify(s) table.insert(M.toasts, s) end
 
+M.world = {}   -- "x,y,z" -> Block-ID für "execute if block"
+
+local function deliver(text)
+  local e = { message = text, cancelled = false }
+  function e:cancel() self.cancelled = true end
+  M.fire("chat_receive", e)
+  if not e.cancelled then table.insert(M.chatlog, text) end
+end
+
+-- Mini-Server: beantwortet tellraw und "execute if block … run tellraw"
+local function simulate(cmd)
+  local direct = cmd:match('^tellraw @s "(.-)"$')
+  if direct then deliver(direct) return end
+  local x, y, z, block, text = cmd:match('^execute if block (%-?%d+) (%-?%d+) (%-?%d+) (%S+) run tellraw @s "(.-)"$')
+  if x and M.world[x .. "," .. y .. "," .. z] == block then deliver(text) end
+end
+
 chat = {
   print = function(s) table.insert(M.chatlog, s) end,
-  command = function(s) table.insert(M.sent, s) end,
+  command = function(s) table.insert(M.sent, s); simulate(s) end,
 }
 
 player = {

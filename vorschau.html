@@ -43,6 +43,8 @@ const PARTS = [
   ['Mahlstein', ['d_mill_b'], null, 0, ['d_mill_i', 'y']], ['Tachometer', ['d_gauge']],
   ['Kanone', ['d_cannon']], ['Lichtmaschine', ['d_alt']], ['Elektromotor', ['d_emotor']],
   ['Propeller-Lager', ['d_bearing'], null, 0, ['d_bprop', 'y']],
+  ['Gehäuste Welle', ['d_encased']], ['Kupplung', ['d_clutch']], ['Gangschaltung', ['d_gearshift']], ['Kettenantrieb', ['d_chain']],
+  ['Säge', ['d_saw_c'], null, 0, ['d_saw_blade', 'y']], ['Brechrad', ['d_crush'], 'y'], ['Windmühle', ['d_wbearing'], null, 0, ['d_windmill', 'y']], ['Segel', ['d_sail']],
   ['Verzauberer', ['d_enchanter']], ['Erfahrungs-Abfluss', ['d_xp_drain']], ['Solarpanel', ['d_solar']], ['Akku', ['d_battery']],
 ];
 const loader = new THREE.TextureLoader();
@@ -119,7 +121,7 @@ const sun = new THREE.DirectionalLight(0xffffff, 0.55); sun.position.set(3, 6, 4
 const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 200);
 const spinners = [];
 const labels = [];
-const cols = 4, gap = 3.2;
+const cols = 6, gap = 3.2;
 
 (async () => {
   try {

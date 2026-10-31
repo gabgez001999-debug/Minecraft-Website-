@@ -1,6 +1,6 @@
 -- name: Create (Eaglercraft-Port)
 -- id: create_zeus
--- version: 0.3.0
+-- version: 0.4.0
 -- author: Larpbase
 -- description: Inoffizieller Create-Port für Eaglercraft 26.3 (Zeus-Lua). Wellen, Zahnräder, Motoren, Bohrer, Lüfter, Presse, Mahlstein, Förderband und Stress-System.
 --
@@ -11,7 +11,7 @@
 --   * Das Kinetik-Netz (Drehzahl, Drehrichtung, Übersetzung, Stress) rechnet diese Mod in Lua,
 --     angelehnt an Create (Code MIT, (c) simibubi & Create-Team). Es werden keine Create-Assets genutzt.
 
-local MOD_VERSION = "0.3.0"
+local MOD_VERSION = "0.4.0"
 
 ---------------------------------------------------------------------------
 -- Kompatibilität: Zeus-Bibliotheken defensiv ansprechen
@@ -347,6 +347,29 @@ local TYPES = {
     parts = { { item = "polished_andesite", s = { 0.22, 1.3, 0.22 } } } },
   stressometer = { name = "Stressometer", axial = true, gauge = "stress", carrier = "polished_andesite",
     parts = { { item = "polished_andesite", s = { 0.22, 1.3, 0.22 } } } },
+  -- weitere Create-Kernblöcke
+  encased_shaft = { name = "Gehäuste Welle", axial = true, carrier = "polished_andesite", parts = {} },
+  clutch = { name = "Kupplung", axial = true, redstone = "clutch", carrier = "redstone_lamp", parts = {} },
+  gearshift = { name = "Gangschaltung", axial = true, redstone = "gearshift", carrier = "redstone_lamp", parts = {} },
+  chain_drive = { name = "Kettenantrieb", axial = true, chain = true, carrier = "polished_andesite", parts = {} },
+  saw = { name = "Mechanische Säge", directional = true, carrier = "polished_andesite", impact = 4,
+    parts = {
+      { item = "iron_block", s = { 0.9, 0.06, 0.9 }, off = 0.55 },
+      { item = "iron_block", s = { 0.9, 0.06, 0.9 }, yaw = 45, off = 0.55 },
+    } },
+  crushing_wheel = { name = "Brechrad", axial = true, crusher = true, carrier = "barrier", impact = 8,
+    parts = {
+      { item = "cobblestone", s = { 1.7, 0.9, 1.7 } },
+      { item = "cobblestone", s = { 1.7, 0.9, 1.7 }, yaw = 45 },
+      { item = "polished_andesite", s = { 0.22, 1.0, 0.22 } },
+    } },
+  windmill_bearing = { name = "Windmühlenlager", directional = true, carrier = "polished_andesite",
+    source = { windmill = true, cap = 32 },
+    parts = {
+      { item = "white_wool", s = { 4.2, 0.08, 0.7 }, off = 0.6 },
+      { item = "white_wool", s = { 0.7, 0.08, 4.2 }, off = 0.6 },
+    } },
+  sail = { name = "Segel", static = true, carrier = "white_wool", parts = {} },
   -- Addon "Create: Kanonen"
   cannon = { name = "Kanonenrohr", addon = "kanonen", directional = true, carrier = "polished_blackstone", impact = 8,
     parts = { { item = "black_concrete", s = { 0.5, 1.2, 0.5 }, off = 0.45 } } },
@@ -371,8 +394,9 @@ local TYPES = {
       { item = "white_wool", s = { 0.4, 0.08, 2.6 }, off = 0.6 },
     } },
 }
-local TYPE_ORDER = { "shaft", "cog", "large_cog", "gearbox", "crank", "water_wheel", "motor",
-  "drill", "fan", "press", "millstone", "belt", "speedometer", "stressometer",
+local TYPE_ORDER = { "shaft", "encased_shaft", "cog", "large_cog", "gearbox", "chain_drive", "clutch", "gearshift",
+  "crank", "water_wheel", "windmill_bearing", "sail", "motor",
+  "drill", "saw", "fan", "press", "millstone", "crushing_wheel", "belt", "speedometer", "stressometer",
   "cannon", "alternator", "electric_motor", "propeller_bearing", "enchanter", "xp_drain", "solar_panel", "battery" }
 
 -- 3D-Modelle aus dem Ressourcenpaket (assets/create_zeus/items/<name>.json).
@@ -394,6 +418,14 @@ local MODELS = {
   belt = {},
   speedometer = { static = "d_speedo", spin = "d_shaft" },
   stressometer = { static = "d_stresso", spin = "d_shaft" },
+  encased_shaft = { static = "d_encased", staticAxis = true },
+  clutch = { static = "d_clutch", staticAxis = true },
+  gearshift = { static = "d_gearshift", staticAxis = true },
+  chain_drive = { static = "d_chain", staticAxis = true },
+  saw = { static = "d_saw_c", staticFacing = true, spin = "d_saw_blade", off = 0.55 },
+  crushing_wheel = { spin = "d_crush" },
+  windmill_bearing = { static = "d_wbearing", staticFacing = true, spin = "d_windmill", off = 0.6, scale = 2 },
+  sail = { static = "d_sail" },
   cannon = { static = "d_cannon", staticFacing = true },
   alternator = { static = "d_alt", staticAxis = true, spin = "d_shaft" },
   electric_motor = { static = "d_emotor", staticAxis = true, spin = "d_shaft" },
@@ -419,6 +451,14 @@ local KIT = {
   { "millstone", "turtle_scute", "create_zeus:millstone", 8 },
   { "belt", "disc_fragment_5", "minecraft:black_carpet", 64 },
   { "speedometer", "echo_shard", "create_zeus:speedometer", 4 },
+  { "encased_shaft", "angler_pottery_sherd", "create_zeus:encased_shaft", 32 },
+  { "clutch", "archer_pottery_sherd", "create_zeus:clutch", 8 },
+  { "gearshift", "arms_up_pottery_sherd", "create_zeus:gearshift", 8 },
+  { "chain_drive", "blade_pottery_sherd", "create_zeus:chain_drive", 16 },
+  { "saw", "brewer_pottery_sherd", "create_zeus:mechanical_saw", 4 },
+  { "crushing_wheel", "burn_pottery_sherd", "create_zeus:crushing_wheel", 4 },
+  { "windmill_bearing", "danger_pottery_sherd", "create_zeus:windmill_bearing", 2 },
+  { "sail", "explorer_pottery_sherd", "create_zeus:sail", 64 },
   { "stressometer", "firework_star", "create_zeus:stressometer", 4 },
   { "cannon", "ghast_tear", "create_zeus:cannon", 4 },
   { "alternator", "resin_brick", "create_zeus:alternator", 8 },
@@ -500,6 +540,22 @@ local ENDING = {
   { "ender_pearl", "ender_eye" }, { "chorus_fruit", "popped_chorus_fruit" }, { "cobblestone", "end_stone" },
   { "stone_bricks", "end_stone_bricks" }, { "purple_dye", "purpur_block" },
 }
+-- Brechräder (Ausgabe pro Einzel-Item, wie Create es auf Bändern/Depots verarbeitet)
+local CRUSH = {
+  { "iron_ore", "raw_iron", 2 }, { "deepslate_iron_ore", "raw_iron", 2 }, { "gold_ore", "raw_gold", 2 },
+  { "deepslate_gold_ore", "raw_gold", 2 }, { "copper_ore", "raw_copper", 5 }, { "deepslate_copper_ore", "raw_copper", 5 },
+  { "coal_ore", "coal", 2 }, { "deepslate_coal_ore", "coal", 2 }, { "redstone_ore", "redstone", 6 },
+  { "lapis_ore", "lapis_lazuli", 8 }, { "diamond_ore", "diamond", 2 }, { "emerald_ore", "emerald", 2 },
+  { "nether_gold_ore", "gold_nugget", 18 }, { "nether_quartz_ore", "quartz", 3 }, { "cobblestone", "gravel", 1 },
+  { "gravel", "sand", 1 }, { "white_wool", "string", 3 }, { "bone", "bone_meal", 5 }, { "blaze_rod", "blaze_powder", 3 },
+  { "sugar_cane", "sugar", 2 },
+}
+local SAW = {
+  { "oak_log", "oak_planks" }, { "spruce_log", "spruce_planks" }, { "birch_log", "birch_planks" },
+  { "jungle_log", "jungle_planks" }, { "acacia_log", "acacia_planks" }, { "dark_oak_log", "dark_oak_planks" },
+  { "mangrove_log", "mangrove_planks" }, { "cherry_log", "cherry_planks" }, { "pale_oak_log", "pale_oak_planks" },
+  { "crimson_stem", "crimson_planks" }, { "warped_stem", "warped_planks" },
+}
 local ENCHANTS = { "mending", "unbreaking", "efficiency", "fortune", "sharpness", "protection", "feather_falling",
   "looting", "power", "silk_touch", "respiration", "depth_strider" }
 local HAUNT = {
@@ -521,6 +577,7 @@ local tickNo = 0
 local selected = "shaft"
 local crankHeld = false
 local active = false   -- in einer Welt
+local query = { ok = false, pinged = false }   -- Rückkanal: Weltabfragen per tellraw
 local energy = 0       -- Strom (FE) aus Lichtmaschinen, für Elektromotoren
 local ENERGY_MAX = 200000
 
@@ -638,7 +695,7 @@ end
 
 local function carrierBlock(c)
   local T = TYPES[c.type]
-  if c.mode == "model" and not T.belt then return "minecraft:barrier" end
+  if c.mode == "model" and not T.belt and not T.redstone then return "minecraft:barrier" end
   local b = "minecraft:" .. T.carrier
   if T.carrierAxis then b = b .. "[axis=" .. axisOf(c) .. "]" end
   return b
@@ -659,10 +716,11 @@ local function spinQuat(c)
   return q
 end
 
-local function summonModel(c, modelId, tag, q, tr)
+local function summonModel(c, modelId, tag, q, tr, sc)
+  sc = sc or 1
   cmd(string.format(
-    'summon item_display %.1f %.1f %.1f {item:{id:"stick",components:{item_model:"create_zeus:%s"}},Tags:["cz","%s"],transformation:{left_rotation:%s,right_rotation:[0f,0f,0f,1f],translation:%s,scale:[1f,1f,1f]}}',
-    c.x + 0.5, c.y + 0.5, c.z + 0.5, modelId, tag, farr(q), farr(tr)))
+    'summon item_display %.1f %.1f %.1f {item:{id:"stick",components:{item_model:"create_zeus:%s"}},Tags:["cz","%s"],transformation:{left_rotation:%s,right_rotation:[0f,0f,0f,1f],translation:%s,scale:%s}}',
+    c.x + 0.5, c.y + 0.5, c.z + 0.5, modelId, tag, farr(q), farr(tr), farr({ sc, sc, sc })))
 end
 
 local function summonModels(c)
@@ -680,7 +738,7 @@ local function summonModels(c)
       local f = FACINGS[c.facing]
       tr = { f[1] * Mo.off, f[2] * Mo.off, f[3] * Mo.off }
     end
-    summonModel(c, Mo.spin, "c" .. c.id, spinQuat(c), tr)
+    summonModel(c, Mo.spin, "c" .. c.id, spinQuat(c), tr, Mo.scale)
   end
   if Mo.head then summonModel(c, Mo.head, "c" .. c.id .. "h", { 0, 0, 0, 1 }, { 0, 0, 0 }) end
   if T.gauge then
@@ -756,10 +814,15 @@ local function gearboxSign(c, face)
 end
 
 -- Liefert {nachbar, verhältnis} mit speed(nachbar) = verhältnis * speed(c)
+local function powered(c)
+  return (c.rsPowered == true) or (c.manualOn == true)
+end
+
 local function links(c)
   local out = {}
   local T = TYPES[c.type]
   if T.belt or not typeOn(c.type) then return out end
+  if T.redstone == "clutch" and powered(c) then return out end   -- gekuppelt: trennt die Drehung
   for _, face in ipairs(FACING_LIST) do
     if acceptsShaft(c, face) then
       local f = FACINGS[face]
@@ -768,7 +831,21 @@ local function links(c)
         local r = 1
         if T.gearbox then r = r * gearboxSign(c, face) end
         if TYPES[n.type].gearbox then r = r * gearboxSign(n, OPPOSITE[face]) end
-        out[#out + 1] = { n, r }
+        -- Gangschaltung mit Redstone: dreht die Ausgangsseite um
+        if T.redstone == "gearshift" and powered(c) and FACINGS[face][5] < 0 then r = -r end
+        if TYPES[n.type].redstone == "gearshift" and powered(n) and FACINGS[OPPOSITE[face]][5] < 0 then r = -r end
+        if TYPES[n.type].redstone == "clutch" and powered(n) then r = nil end
+        if r then out[#out + 1] = { n, r } end
+      end
+    end
+  end
+  -- Kettenantriebe nebeneinander (gleiche Achse) laufen gleich schnell
+  if T.chain then
+    for _, ax in ipairs(PERP[c.axis]) do
+      local v = AXIS_VEC[ax]
+      for _, sgn in ipairs({ 1, -1 }) do
+        local n = at(c.x + v[1] * sgn, c.y + v[2] * sgn, c.z + v[3] * sgn)
+        if n and TYPES[n.type].chain and n.axis == c.axis and typeOn(n.type) then out[#out + 1] = { n, 1 } end
       end
     end
   end
@@ -809,12 +886,19 @@ local function sourceSpeed(c)
     return nil
   end
   if T.source.creative then return (c.rpm or T.source.rpm) * sign end
+  if T.source.windmill then
+    local n = c.sails or 0
+    if n < 8 then return nil end          -- wie in Create: mindestens 8 Segel
+    return mmin(16, floor(n / 2)) * sign
+  end
+  if c.type == "water_wheel" and c.waterKnown and not c.water then return nil end
   return T.source.rpm * sign
 end
 
 local function sourceCapacity(c, speed)
   local T = TYPES[c.type]
   if T.source.creative then return 16384 end
+  if T.source.windmill then return T.source.cap * abs(speed) end
   if T.source.electric then return T.source.cap * abs(speed) end
   return T.source.cap * abs(speed)
 end
@@ -1059,7 +1143,7 @@ local function place(typeName, x, y, z, face)
     mode = setting("models") and "model" or "parts" }
   nextId = nextId + 1
   local look = lookFacing()
-  if typeName == "propeller_bearing" then
+  if typeName == "propeller_bearing" or typeName == "windmill_bearing" then
     c.facing = face or "up"
   elseif T.directional then
     c.facing = look
@@ -1221,6 +1305,8 @@ local function setPressHead(c, down)
     c.id, f3(y)))
 end
 
+local processSaw, processCrusher
+
 local function fireCannon(c)
   local f = FACINGS[c.facing]
   local x, y, z = c.x + 0.5 + f[1] * 1.3, c.y + 0.5 + f[2] * 1.3, c.z + 0.5 + f[3] * 1.3
@@ -1262,6 +1348,44 @@ local function isDay()
   return t < 12500 or t > 23500
 end
 
+-- Ein Item aus einem Stapel verarbeiten: Ergebnis daneben erzeugen, Stapel um 1 verkleinern
+local function processOne(px, py, pz, radius, input, output, count)
+  local sel = string.format('@e[type=item,distance=..%.1f,nbt={Item:{id:"minecraft:%s"}},limit=1]', radius, input)
+  cmd(string.format('execute positioned %.2f %.2f %.2f as %s at @s run summon item ~ ~ ~ {Item:{id:"minecraft:%s",count:%d}}',
+    px, py, pz, sel, output, count))
+  cmd(string.format('execute positioned %.2f %.2f %.2f as %s store result entity @s Item.count int 1 run data get entity @s Item.count 0.999',
+    px, py, pz, sel))
+end
+
+processSaw = function(c)
+  local f = FACINGS[c.facing]
+  local tx, ty, tz = c.x + f[1], c.y + f[2], c.z + f[3]
+  -- Bäume fällen: Stamm vor der Säge und alles darüber
+  for dy = 0, 12 do
+    cmd(string.format("execute if block %d %d %d #minecraft:logs run setblock %d %d %d air destroy", tx, ty + dy, tz, tx, ty + dy, tz))
+  end
+  -- Stämme, die vor der Säge liegen, zu je 6 Brettern sägen
+  for _, r in ipairs(SAW) do processOne(tx + 0.5, ty + 0.3, tz + 0.5, 0.9, r[1], r[2], 6) end
+end
+
+processCrusher = function(c)
+  local p = PERP[c.axis]
+  for _, ax in ipairs(p) do
+    if ax ~= "y" then
+      local v = AXIS_VEC[ax]
+      for dist = 1, 2 do
+        local n = at(c.x + v[1] * dist, c.y, c.z + v[3] * dist)
+        if n and n.type == "crushing_wheel" and n.id > c.id and n.axis == c.axis and (n.speed or 0) == -(c.speed or 0) then
+          -- Mitte zwischen beiden Rädern: Items fallen hinein (mit Lücke) oder liegen oben drauf
+          local mx, mz = c.x + 0.5 + v[1] * dist / 2, c.z + 0.5 + v[3] * dist / 2
+          local my = dist == 2 and c.y + 0.5 or c.y + 1.2
+          for _, r in ipairs(CRUSH) do processOne(mx, my, mz, 0.9, r[1], r[2], r[3]) end
+        end
+      end
+    end
+  end
+end
+
 local function updateEnergy()
   local akkus, solar = 0, 0
   for _, c in pairs(comps) do
@@ -1289,7 +1413,13 @@ local function processMachines()
     local T = TYPES[c.type]
     if c.near and c.speed ~= 0 and (T.impact or T.belt) and typeOn(c.type) then
       local s = abs(c.speed)
-      if c.type == "enchanter" then
+      if c.type == "saw" then
+        c.progress = c.progress + s
+        if c.progress >= 1600 then c.progress = 0; processSaw(c) end
+      elseif c.type == "crushing_wheel" then
+        c.progress = c.progress + s
+        if c.progress >= 1200 then c.progress = 0; processCrusher(c) end
+      elseif c.type == "enchanter" then
         c.progress = c.progress + s
         if c.progress >= 3600 then
           c.progress = 0
@@ -1391,6 +1521,18 @@ local function animate()
           "execute as @e[tag=c%d] run data merge entity @s {start_interpolation:0,interpolation_duration:%d,transformation:{left_rotation:%s}}",
           c.id, interval, farr(spinQuat(c))))
       end
+    end
+  end
+end
+
+local function countSails()
+  for _, c in pairs(comps) do
+    if c.type == "windmill_bearing" then
+      local n = 0
+      for _, o in pairs(comps) do
+        if o.type == "sail" and o.dim == c.dim and abs(o.x - c.x) <= 5 and abs(o.y - c.y) <= 5 and abs(o.z - c.z) <= 5 then n = n + 1 end
+      end
+      if n ~= c.sails then c.sails = n; solveNeeded = true end
     end
   end
 end
@@ -1844,6 +1986,12 @@ local function wrench()
   local c = targetComponent()
   if not c then say("Schau auf ein Create-Bauteil.") return end
   if c.type == "motor" or c.type == "electric_motor" then openMotorMenu(c) return end
+  if TYPES[c.type].redstone then
+    c.manualOn = not c.manualOn
+    dirty, solveNeeded = true, true
+    toast(TYPES[c.type].name .. (c.manualOn and ": geschaltet (wie mit Redstone)" or ": normal"))
+    return
+  end
   if c.type == "water_wheel" then
     c.rev = not c.rev
     dirty, solveNeeded = true, true
@@ -1949,6 +2097,20 @@ if hud then
         (c.type == "electric_motor" and not c.powered) and "#FF5555" or "#7FD4FF" }
     end
     if T.addon and not typeOn(c.type) then lines[#lines + 1] = { "Addon deaktiviert (B → Bestätigen)", "#FF5555" } end
+    if T.redstone then
+      local on = powered(c)
+      local what = T.redstone == "clutch" and (on and "getrennt" or "verbunden") or (on and "umgekehrt" or "normal")
+      lines[#lines + 1] = { "Redstone: " .. (on and "AN" or "AUS") .. " – " .. what, on and "#FF5555" or "#AAAAAA" }
+      if not query.ok then lines[#lines + 1] = { "[Schraubenschlüssel] schaltet von Hand", "#CCCCCC" } end
+    end
+    if c.type == "windmill_bearing" then
+      local n = c.sails or 0
+      lines[#lines + 1] = { string.format("Segel: %d%s", n, n < 8 and " – mindestens 8 nötig" or ""), n < 8 and "#FF5555" or "#7FD4FF" }
+    end
+    if c.type == "water_wheel" and c.waterKnown and not c.water then
+      lines[#lines + 1] = { "Kein Wasser am Rad – Wasser seitlich ranfließen lassen", "#FF5555" }
+    end
+    if c.type == "crushing_wheel" then lines[#lines + 1] = { "Paar nötig: zweites Brechrad daneben, gegenläufig", "#CCCCCC" } end
     if T.source and T.source.manual then lines[#lines + 1] = { "Rechtsklick oder [G] halten zum Kurbeln", "#CCCCCC" } end
     if c.type == "motor" then lines[#lines + 1] = { "[V] Drehzahl einstellen", "#CCCCCC" } end
     local tw = 0
@@ -1970,6 +2132,9 @@ local ALIASES = {
   getriebe = "gearbox", kurbel = "crank", handkurbel = "crank", wasserrad = "water_wheel", motor = "motor",
   bohrer = "drill", luefter = "fan", ["lüfter"] = "fan", presse = "press", mahlstein = "millstone",
   band = "belt", foerderband = "belt", ["förderband"] = "belt", tacho = "speedometer", stress = "stressometer",
+  gehaeuste = "encased_shaft", kupplung = "clutch", gangschaltung = "gearshift", kette = "chain_drive",
+  kettenantrieb = "chain_drive", saege = "saw", ["säge"] = "saw", brechrad = "crushing_wheel", windmuehle = "windmill_bearing",
+  ["windmühle"] = "windmill_bearing", segel = "sail",
   kanone = "cannon", lichtmaschine = "alternator", elektromotor = "electric_motor", propeller = "propeller_bearing",
   verzauberer = "enchanter", abfluss = "xp_drain", solar = "solar_panel", solarpanel = "solar_panel", akku = "battery",
 }
@@ -2082,7 +2247,7 @@ end
 ---------------------------------------------------------------------------
 -- Events
 ---------------------------------------------------------------------------
-local pollRightClick   -- weiter unten definiert, im Tick benutzt
+local pollRightClick, pollLeftClickFn, pollWorldFn, handleQueryFn   -- weiter unten definiert, im Tick benutzt
 
 local function onJoin()
   worldKey = worldName()
@@ -2117,9 +2282,11 @@ on("tick", function()
   stepInstall()
   Menu.tick()
   pollRightClick()
+  if pollLeftClickFn then pollLeftClickFn() end
+  if pollWorldFn and tickNo % 10 == 5 then pollWorldFn() end
   updateCrank()
   updateEnergy()
-  if tickNo % 10 == 1 then updateNear() end
+  if tickNo % 10 == 1 then updateNear(); countSails() end
   -- Kurbeln läuft aus
   for _, c in pairs(comps) do
     if c.type == "crank" and c.crankUntil and c.crankUntil == tickNo - 1 then solveNeeded = true end
@@ -2133,6 +2300,73 @@ on("tick", function()
   flushQueue()
   if dirty and tickNo % 100 == 0 then save() end
 end)
+
+local function ask(tag, condition)
+  cmd(string.format('execute %s run tellraw @s "czq %s"', condition, tag))
+end
+
+local function handleQuery(text)
+  local tag = text:match("czq (.+)$")
+  if not tag then return false end
+  query.ok = true
+  local kind, id = tag:match("^(%a+) (%d+)$")
+  local c = id and byId[tonumber(id)]
+  if c then
+    if kind == "rs" then c.rsSeen = true elseif kind == "ww" then c.waterSeen = true end
+  end
+  return true
+end
+
+-- Alle 10 Ticks: Redstone an Kupplung/Gangschaltung, Wasser am Wasserrad
+local function pollWorld()
+  if not query.pinged then query.pinged = true; cmd('tellraw @s "czq ping"') end
+  for _, c in pairs(comps) do
+    if c.near then
+      local T = TYPES[c.type]
+      if T.redstone then
+        if c.rsAsked then
+          local now = c.rsSeen == true
+          if query.ok and now ~= (c.rsPowered == true) then c.rsPowered = now; solveNeeded = true end
+        end
+        c.rsSeen, c.rsAsked = false, true
+        ask("rs " .. c.id, string.format("if block %d %d %d minecraft:redstone_lamp[lit=true]", c.x, c.y, c.z))
+      elseif c.type == "water_wheel" then
+        if c.wwAsked and query.ok then
+          local now = c.waterSeen == true
+          if now ~= c.water or not c.waterKnown then c.water = now; c.waterKnown = true; solveNeeded = true end
+        end
+        c.waterSeen, c.wwAsked = false, true
+        for _, ax in ipairs(PERP[c.axis or "y"]) do
+          local v = AXIS_VEC[ax]
+          for _, sg in ipairs({ 1, -1 }) do
+            ask("ww " .. c.id, string.format("if block %d %d %d minecraft:water", c.x + v[1] * sg, c.y + v[2] * sg, c.z + v[3] * sg))
+          end
+        end
+      end
+    end
+  end
+end
+
+-- Linksklick auf ein Create-Teil baut es ab (es kommt zurück ins Inventar)
+local lastBreak = -100
+local leftWasDown = false
+local function breakTarget()
+  if not active then return end
+  local okS, scr = call(game, "screen")
+  if okS and scr then return end
+  local t = lookTarget()
+  if not t then return end
+  local c = at(t.x, t.y, t.z)
+  if not c or tickNo - lastBreak < 4 then return end
+  lastBreak = tickNo
+  pickUp(c)
+end
+local function pollLeftClick()
+  local ok, d = call(lib("mouse"), "isDown", "left")
+  local down = ok and d == true
+  if down and not leftWasDown then breakTarget() end
+  leftWasDown = down
+end
 
 local lastUse = -100
 local heldLogged = false
@@ -2173,6 +2407,8 @@ end
 
 -- Abfrage der rechten Maustaste in jedem Tick (funktioniert unabhängig vom Event-Format)
 local rightWasDown = false
+pollLeftClickFn, pollWorldFn, handleQueryFn = pollLeftClick, pollWorld, handleQuery
+
 pollRightClick = function()
   local ok, d = call(lib("mouse"), "isDown", "right")
   local down = ok and d == true
@@ -2193,6 +2429,11 @@ on("mouse_click", function(e)
 end)
 
 on("chat_receive", function(e)
+  local raw = tostring(field(e, "message") or ""):gsub("§.", "")
+  if handleQueryFn and raw:find("czq ", 1, true) and handleQueryFn(raw) then
+    pcall(function() e:cancel() end)
+    return
+  end
   if not setting("quiet") then return end
   if tickNo - lastCmdTick > 40 then return end
   local msg = tostring(field(e, "message") or "")

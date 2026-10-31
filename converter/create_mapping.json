@@ -1,37 +1,146 @@
 {
   "_info": "Welche Original-Create-Modelle (aus deiner eigenen Create-Jar) der Konverter für welche Modelle des Ports einsetzt. Pfade relativ zu assets/create/models/. Fehlt ein Modell oder nutzt es einen eigenen Create-Loader, bleibt das Modell aus dem Port-Paket.",
   "display": {
-    "d_shaft": ["block/shaft"],
-    "d_cog": ["block/cogwheel"],
-    "d_lcog": ["block/large_cogwheel"],
-    "d_gearbox": ["block/gearbox/block"],
-    "d_crank": ["block/hand_crank/block", "block/hand_crank/handle"],
-    "d_cmotor": ["block/creative_motor/block_vertical"],
-    "d_drill_c": ["block/mechanical_drill/block"],
-    "d_drill_h": ["block/mechanical_drill/head"],
-    "d_fan_c": ["block/encased_fan/block"],
-    "d_prop": ["block/encased_fan/propeller"],
-    "d_press_c": ["block/mechanical_press/block"],
-    "d_press_h": ["block/mechanical_press/head"],
-    "d_mill_b": ["block/millstone/block"],
-    "d_mill_i": ["block/millstone/inner"],
-    "d_speedo": ["item/speedometer"],
-    "d_stresso": ["item/stressometer"]
+    "d_shaft": [
+      "block/shaft"
+    ],
+    "d_cog": [
+      "block/cogwheel"
+    ],
+    "d_lcog": [
+      "block/large_cogwheel"
+    ],
+    "d_gearbox": [
+      "block/gearbox/block"
+    ],
+    "d_crank": [
+      "block/hand_crank/block",
+      "block/hand_crank/handle"
+    ],
+    "d_cmotor": [
+      "block/creative_motor/block_vertical"
+    ],
+    "d_drill_c": [
+      "block/mechanical_drill/block"
+    ],
+    "d_drill_h": [
+      "block/mechanical_drill/head"
+    ],
+    "d_fan_c": [
+      "block/encased_fan/block"
+    ],
+    "d_prop": [
+      "block/encased_fan/propeller"
+    ],
+    "d_press_c": [
+      "block/mechanical_press/block"
+    ],
+    "d_press_h": [
+      "block/mechanical_press/head"
+    ],
+    "d_mill_b": [
+      "block/millstone/block"
+    ],
+    "d_mill_i": [
+      "block/millstone/inner"
+    ],
+    "d_speedo": [
+      "item/speedometer"
+    ],
+    "d_stresso": [
+      "item/stressometer"
+    ],
+    "d_encased": [
+      "block/encased_shaft/block_andesite"
+    ],
+    "d_clutch": [
+      "block/clutch/block"
+    ],
+    "d_gearshift": [
+      "block/gearshift/block"
+    ],
+    "d_chain": [
+      "block/encased_chain_drive/single"
+    ],
+    "d_saw_c": [
+      "block/mechanical_saw/vertical"
+    ],
+    "d_crush": [
+      "block/crushing_wheel/block"
+    ],
+    "d_wbearing": [
+      "block/windmill_bearing"
+    ],
+    "d_sail": [
+      "block/white_sail"
+    ]
   },
   "items": {
-    "shaft": ["item/shaft"],
-    "cogwheel": ["item/cogwheel"],
-    "large_cogwheel": ["item/large_cogwheel"],
-    "gearbox": ["item/gearbox"],
-    "hand_crank": ["item/hand_crank"],
-    "water_wheel": ["item/water_wheel"],
-    "creative_motor": ["item/creative_motor"],
-    "mechanical_drill": ["item/mechanical_drill"],
-    "encased_fan": ["item/encased_fan"],
-    "mechanical_press": ["item/mechanical_press"],
-    "millstone": ["item/millstone"],
-    "speedometer": ["item/speedometer"],
-    "stressometer": ["item/stressometer"],
-    "wrench": ["item/wrench"]
+    "shaft": [
+      "item/shaft"
+    ],
+    "cogwheel": [
+      "item/cogwheel"
+    ],
+    "large_cogwheel": [
+      "item/large_cogwheel"
+    ],
+    "gearbox": [
+      "item/gearbox"
+    ],
+    "hand_crank": [
+      "item/hand_crank"
+    ],
+    "water_wheel": [
+      "item/water_wheel"
+    ],
+    "creative_motor": [
+      "item/creative_motor"
+    ],
+    "mechanical_drill": [
+      "item/mechanical_drill"
+    ],
+    "encased_fan": [
+      "item/encased_fan"
+    ],
+    "mechanical_press": [
+      "item/mechanical_press"
+    ],
+    "millstone": [
+      "item/millstone"
+    ],
+    "speedometer": [
+      "item/speedometer"
+    ],
+    "stressometer": [
+      "item/stressometer"
+    ],
+    "wrench": [
+      "item/wrench"
+    ],
+    "encased_shaft": [
+      "block/encased_shaft/item_andesite"
+    ],
+    "clutch": [
+      "item/clutch"
+    ],
+    "gearshift": [
+      "item/gearshift"
+    ],
+    "chain_drive": [
+      "item/encased_chain_drive"
+    ],
+    "mechanical_saw": [
+      "item/mechanical_saw"
+    ],
+    "crushing_wheel": [
+      "item/crushing_wheel"
+    ],
+    "windmill_bearing": [
+      "item/windmill_bearing"
+    ],
+    "sail": [
+      "item/white_sail"
+    ]
   }
 }
