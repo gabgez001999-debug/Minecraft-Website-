@@ -121,6 +121,20 @@ function M.click(text)
   error("Button nicht gefunden: " .. text .. " | vorhanden: " .. table.concat(all, " / "))
 end
 
+function M.screenKey(k)
+  local s = M.current
+  assert(s and s.spec.onKey, "kein onKey im Bildschirm")
+  return s.spec.onKey(k)
+end
+
+function M.closeScreen()
+  if M.current then M.current:close() end
+end
+
+function M.widgetCount()
+  return M.current and #M.current.items or 0
+end
+
 function M.screenText()
   local s = M.current
   if not s then return "" end

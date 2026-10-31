@@ -1,6 +1,6 @@
 -- name: Create (Eaglercraft-Port)
 -- id: create_zeus
--- version: 0.2.0
+-- version: 0.2.1
 -- author: Larpbase
 -- description: Inoffizieller Create-Port für Eaglercraft 26.3 (Zeus-Lua). Wellen, Zahnräder, Motoren, Bohrer, Lüfter, Presse, Mahlstein, Förderband und Stress-System.
 --
@@ -11,7 +11,7 @@
 --   * Das Kinetik-Netz (Drehzahl, Drehrichtung, Übersetzung, Stress) rechnet diese Mod in Lua,
 --     angelehnt an Create (Code MIT, (c) simibubi & Create-Team). Es werden keine Create-Assets genutzt.
 
-local MOD_VERSION = "0.2.0"
+local MOD_VERSION = "0.2.1"
 
 ---------------------------------------------------------------------------
 -- Kompatibilität: Zeus-Bibliotheken defensiv ansprechen
@@ -1511,93 +1511,135 @@ end
 ---------------------------------------------------------------------------
 -- B-Menü
 ---------------------------------------------------------------------------
-local Menu = { scr = nil, tab = "teile", detail = nil, reveal = 0, total = 0 }
+local Menu = { scr = nil, tab = "teile", detail = nil, reveal = 0, total = 0, page = 1, pages = 1 }
 local TABS = { { "teile", "Bauteile" }, { "entdecken", "Entdecken" }, { "abh", "Abhängigkeiten" }, { "bestaetigen", "Bestätigen" } }
+local guiHeight = nil   -- vom HUD gemessen, damit das Menü auf den Bildschirm passt
 
-local function menuItems()
-  local items = {}
-  local function L(t) items[#items + 1] = { "label", t } end
-  local function B(t, fn) items[#items + 1] = { "button", t, fn } end
-  if install then
-    local a = ADDON_BY_ID[install.queue[install.idx]]
-    L(string.format("%s  %s  %d%%", a.name, bar(install.progress, 20), floor(install.progress)))
-    L(stageText(install.progress) .. (#install.queue > 1 and string.format("  (%d/%d)", install.idx, #install.queue) or ""))
+-- Wie viele Zeilen (Knöpfe/Texte) passen untereinander auf den Bildschirm?
+local function menuRows()
+  local h = guiHeight or 240
+  return mmax(5, mmin(14, floor((h - 46) / 24)))
+end
+
+-- Text auf mehrere kurze Zeilen verteilen (Labels werden nicht umgebrochen)
+local function wrap(text, width)
+  local lines, line = {}, ""
+  for word in tostring(text):gmatch("%S+") do
+    if #line > 0 and #line + 1 + #word > width then lines[#lines + 1] = line; line = word
+    else line = (#line > 0) and (line .. " " .. word) or word end
   end
+  if #line > 0 then lines[#lines + 1] = line end
+  return lines
+end
+
+local function tabIndex()
+  for i, t in ipairs(TABS) do if t[1] == Menu.tab then return i end end
+  return 1
+end
+
+local function setTab(i)
+  Menu.tab = TABS[((i - 1) % #TABS) + 1][1]
+  Menu.detail = nil
+  Menu.page = 1
+end
+
+-- Kopfzeilen (immer oben) und Liste (seitenweise)
+local function menuContent()
+  local head, list = {}, {}
+  local function L(dst, t) dst[#dst + 1] = { "label", t } end
+  local function B(dst, t, fn) dst[#dst + 1] = { "button", t, fn } end
+
   if Menu.detail then
     local a = ADDON_BY_ID[Menu.detail]
-    L(a.name .. "  ·  v" .. a.version .. "  ·  " .. a.size .. " KB")
-    L(a.desc)
-    L("Inspiriert von " .. a.inspired)
-    local deps = {}
-    for _, d in ipairs(a.deps) do
-      deps[#deps + 1] = ADDON_BY_ID[d].name .. ((d == "create" or addonState.installed[d]) and " ✔" or " ✖")
+    B(head, "◂ Zurück zu Entdecken", function() Menu.detail = nil; Menu.refresh(true) end)
+    if install then
+      local cur = ADDON_BY_ID[install.queue[install.idx]]
+      L(head, string.format("%s %s %d%%", cur.name, bar(install.progress, 12), floor(install.progress)))
     end
-    L("Benötigt: " .. table.concat(deps, ", "))
     if addonState.installed[a.id] then
-      B(addonState.enabled[a.id] and "Deaktivieren" or "Aktivieren", function() toggleAddon(a.id); Menu.refresh(false) end)
-      B("Deinstallieren", function() uninstallAddon(a.id); Menu.refresh(false) end)
-    elseif install then
-      L("Installation läuft …")
-    else
+      B(head, addonState.enabled[a.id] and "✔ AN – klicken zum Ausschalten" or "✖ AUS – klicken zum Einschalten", function()
+        toggleAddon(a.id); Menu.refresh(false)
+      end)
+    elseif not install then
       local miss = missingDeps(a.id)
-      local txt = "↓ Installieren"
-      if #miss > 0 then
-        local names = {}
-        for _, d in ipairs(miss) do names[#names + 1] = ADDON_BY_ID[d].name end
-        txt = "↓ Installieren (mit " .. table.concat(names, ", ") .. ")"
-      end
-      B(txt, function() startInstall(a.id); Menu.refresh(false) end)
+      B(head, #miss > 0 and ("↓ Installieren (+" .. #miss .. " Abhängigkeit)") or "↓ Installieren", function()
+        startInstall(a.id); Menu.refresh(false)
+      end)
     end
-    B("← Zurück", function() Menu.detail = nil; Menu.refresh(true) end)
-    return items
+    L(list, a.name .. "  v" .. a.version)
+    for i, d in ipairs(a.deps) do
+      L(list, (i == 1 and "Braucht: " or "              ") .. ADDON_BY_ID[d].name ..
+        ((d == "create" or addonState.installed[d]) and " ✔" or " ✖"))
+    end
+    for _, line in ipairs(wrap(a.desc, 44)) do L(list, line) end
+    L(list, "Vorbild: " .. a.inspired .. " · " .. a.size .. " KB")
+    if addonState.installed[a.id] then
+      B(list, "Deinstallieren", function() uninstallAddon(a.id); Menu.refresh(false) end)
+    end
+    return head, list
   end
+
+  -- Tab-Leiste oben: ein Knopf, Klick = nächster Tab (Tasten 1–4 springen direkt)
+  local ti = tabIndex()
+  B(head, "Tab: " .. TABS[ti][2] .. "  ▸", function() setTab(ti + 1); Menu.refresh(true) end)
+  if install then
+    local cur = ADDON_BY_ID[install.queue[install.idx]]
+    L(head, string.format("%s %s %d%%", cur.name, bar(install.progress, 12), floor(install.progress)))
+  end
+
   if Menu.tab == "teile" then
-    L("Klick = ins Inventar · Rechtsklick mit dem Teil setzt es · Schraubenschlüssel dreht")
+    B(list, "★ Alle Teile geben", function() giveKit() end)
     for _, k in ipairs(KIT) do
       if k[1] == "wrench" or typeOn(k[1]) then
-        local T = TYPES[k[1]]
-        local tag = ""
-        if T and T.source then tag = "  · Quelle" elseif T and T.impact then tag = string.format("  · %g SU/RPM", T.impact) end
-        if T and T.addon then tag = tag .. "  · " .. ADDON_BY_ID[T.addon].name end
-        B(partLabel(k[1]) .. "  ×" .. k[4] .. tag, function() cmd(giveCmd(k)); toast(partLabel(k[1]) .. " erhalten") end)
+        B(list, partLabel(k[1]) .. "  ×" .. k[4], function() cmd(giveCmd(k)); toast(partLabel(k[1]) .. " erhalten") end)
       end
     end
-    B("Alle Teile geben", function() giveKit() end)
   elseif Menu.tab == "entdecken" then
-    L("Addons für den Create-Port – anklicken für Details")
     for _, a in ipairs(ADDONS) do
-      local st = addonState.installed[a.id] and (addonState.enabled[a.id] and "✔ aktiv" or "○ aus") or "↓ verfügbar"
-      B(a.name .. "   " .. st, function() Menu.detail = a.id; Menu.refresh(true) end)
+      local st = addonState.installed[a.id] and (addonState.enabled[a.id] and "✔" or "○") or "↓"
+      B(list, st .. " " .. a.name, function() Menu.detail = a.id; Menu.page = 1; Menu.refresh(true) end)
     end
   elseif Menu.tab == "abh" then
-    L("Abhängigkeiten der Addons")
     for _, a in ipairs(ADDONS) do
-      local parts = {}
+      L(list, a.name .. ":")
       for _, d in ipairs(a.deps) do
-        parts[#parts + 1] = ADDON_BY_ID[d].name .. ((d == "create" or addonState.installed[d]) and " ✔" or " ✖")
+        L(list, "   braucht " .. ADDON_BY_ID[d].name .. ((d == "create" or addonState.installed[d]) and " ✔" or " ✖"))
       end
-      L(a.name .. "  →  " .. table.concat(parts, ", "))
     end
   elseif Menu.tab == "bestaetigen" then
-    L("Installierte Mods – Klick schaltet an oder aus")
-    B("Create (Port) v" .. MOD_VERSION .. "   ✔ immer aktiv", function() end)
+    B(list, "✔ Create (Port) v" .. MOD_VERSION, function() toast("Create (Port) ist immer aktiv") end)
     local any = false
     for _, a in ipairs(ADDONS) do
       if addonState.installed[a.id] then
         any = true
-        B(a.name .. "   " .. (addonState.enabled[a.id] and "✔ AKTIVIERT" or "✖ DEAKTIVIERT"), function()
+        B(list, (addonState.enabled[a.id] and "✔ AN  " or "✖ AUS  ") .. a.name, function()
           toggleAddon(a.id)
           Menu.refresh(false)
         end)
       end
     end
-    if not any then L("Noch keine Addons installiert – Tab „Entdecken“.") end
+    if not any then L(list, "Noch keine Addons – Tab Entdecken") end
   end
-  L("────────────────────────────")
-  for _, t in ipairs(TABS) do
-    B((Menu.tab == t[1] and "▶ " or "") .. t[2], function() Menu.tab = t[1]; Menu.detail = nil; Menu.refresh(true) end)
+  return head, list
+end
+
+-- Sichtbare Einträge: Kopf + Seitenknopf + eine Seite der Liste
+local function menuItems()
+  local head, list = menuContent()
+  local items = {}
+  for _, it in ipairs(head) do items[#items + 1] = it end
+  local per = mmax(2, menuRows() - #head)
+  if #list > per then per = per - 1 end   -- Platz für den Seitenknopf
+  Menu.pages = mmax(1, math.ceil(#list / per))
+  if Menu.page > Menu.pages then Menu.page = 1 end
+  if Menu.pages > 1 then
+    items[#items + 1] = { "button", string.format("Seite %d/%d  ▸", Menu.page, Menu.pages), function()
+      Menu.page = Menu.page % Menu.pages + 1
+      Menu.refresh(true)
+    end }
   end
-  B("Schließen", function() Menu.close() end)
+  local first = (Menu.page - 1) * per + 1
+  for i = first, mmin(#list, first + per - 1) do items[#items + 1] = list[i] end
   return items
 end
 
@@ -1617,6 +1659,20 @@ function Menu.refresh(animate)
   if Menu.scr then pcall(Menu.scr.rebuild, Menu.scr) end
 end
 
+-- Tastatur im Menü: 1–4 = Tab, ←/→ = Seite
+local function menuKey(key)
+  local k = tostring(type(key) == "table" and (field(key, "key") or field(key, "name")) or key):lower()
+  local n = tonumber(k)
+  if n and n >= 1 and n <= #TABS then setTab(n); Menu.refresh(true) return true end
+  if k == "right" or k == "arrowright" or k == "pagedown" then
+    Menu.page = Menu.page % Menu.pages + 1; Menu.refresh(true) return true
+  end
+  if k == "left" or k == "arrowleft" or k == "pageup" then
+    Menu.page = (Menu.page - 2) % Menu.pages + 1; Menu.refresh(true) return true
+  end
+  return false
+end
+
 function Menu.close()
   if Menu.scr then pcall(Menu.scr.close, Menu.scr) end
   Menu.scr = nil
@@ -1626,10 +1682,12 @@ function Menu.open(tab)
   if not ui then say("UI nicht verfügbar – nutze /create kit und /create setzen <teil>") return end
   if tab then Menu.tab = tab end
   Menu.detail = nil
+  Menu.page = 1
   Menu.reveal = 0
   local ok, scr = pcall(ui.screen, {
-    title = "Create",
+    title = "Create  ·  Tasten 1–4: Tabs  ·  ← →: Seiten  ·  Esc: zu",
     closeOnEsc = true,
+    onKey = function(key) return menuKey(key) end,
     init = function(s) Menu.build(s) end,
     onClose = function() Menu.scr = nil end,
   })
@@ -1716,6 +1774,8 @@ end
 local function argb(hex) return hex end
 if hud then
   pcall(hud.add, "create_install", function(ctx)
+    local hh = field(ctx, "height")
+    if type(hh) == "number" and hh > 100 then guiHeight = hh end
     if not install then return end
     local w = field(ctx, "width") or 320
     local a = ADDON_BY_ID[install.queue[install.idx]]
