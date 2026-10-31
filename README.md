@@ -26,9 +26,13 @@ Ablauf:
   WorldEdit → LibCustomItems, Guns → AsyncSink), fragt ein Popup, ob die mit heruntergeladen werden sollen.
 - **Spielen** (unten rechts) bei 26.x: neuer Tab mit eaglercraft.com in der Version, dazu die Import-Hilfe mit allen Dateien.
   Nach „Erledigt“ startet die Instanz direkt, bis sich Mods oder Version ändern.
-- **Spielen** bei EaglerForge: öffnet deinen EaglerForge-Client mit den Mods der Instanz in einem neuen Tab. Dafür einmal unter
-  Einstellungen die `processed.html` aus dem [EaglerForge Injector](https://eaglerforge.github.io/EaglerForgeInjector/) hochladen
-  (bleibt nur im Browser) oder die Adresse eines gehosteten EaglerForge-Clients eintragen.
+- **Spielen** bei EaglerForge: öffnet EaglerForge mit den Mods der Instanz in einem neuen Tab. Beim ersten Mal pro Version
+  fragt das Dashboard nach dem Client: Datei per Link aus dem
+  [Eaglercraft-Archive](https://github.com/Eaglercraft-Archive/unminified-eaglercraft-builds/releases/latest) holen und
+  reinziehen. Das Dashboard baut EaglerForge dann selbst ein (gleicher Injector wie auf der EaglerForge-Seite, mitgeliefert in
+  [`vendor/eaglerforge-injector`](vendor/eaglerforge-injector), MIT) und speichert den Client im Browser. Eine fertige
+  `processed.html` geht auch. Automatisch herunterladen kann die Seite die Datei nicht: GitHub-Releases schicken keine
+  CORS-Header, und einen kompletten Minecraft-Client legt dieses Repo bewusst nicht selbst ab.
 - **Mehrspieler:** Einladungslink teilen. Wer andere Mods hat, bekommt beim Öffnen die Frage, ob eine Instanz mit allen Mods der Welt erstellt werden soll.
 
 Kataloge: [`dashboard/zeus-mods.json`](dashboard/zeus-mods.json) baut `python tools/build.py` mit,
@@ -81,7 +85,8 @@ python tools/build.py       # baut dist/*.zip, dist/*.lua und das Ressourcenpake
 - [Create](https://github.com/Creators-of-Create/Create) von simibubi & dem Create-Team. Code MIT,
   Assets „All Rights Reserved“. Hier werden keine Create-Assets verwendet.
 - [Phone: MC-Device](https://www.curseforge.com/minecraft/mc-mods/phone-mc-device) von NotPumpkins. Nur die Idee, kein Code.
-- [EaglerForge](https://github.com/EaglerForge/EaglerForgeInjector): Mod-Loader und Beispiel-Mods (MIT), im Dashboard direkt von dort geladen.
+- [EaglerForge](https://github.com/EaglerForge/EaglerForgeInjector): Mod-Loader, Injector (in `vendor/`) und Beispiel-Mods (MIT).
+- [Eaglercraft-Archive](https://github.com/Eaglercraft-Archive): unminifizierte EaglercraftX-Builds, die das Dashboard zum Einbauen verlinkt.
 - [Eaglercraft](https://eaglercraft.com). Kein offizielles Produkt von Mojang/Microsoft.
 
 Lizenz der Mods in diesem Repo: MIT (siehe [`LICENSE`](LICENSE)).

@@ -118,6 +118,11 @@
   @media (prefers-reduced-motion: reduce) { .modal, .toast { animation: none; } .bar > div { transition: none; } }
   code { font: 13px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background: var(--panel2); padding: 1px 5px; border-radius: 5px; }
   .copy { display: flex; gap: 8px; }
+  .drop { display: block; text-align: center; padding: 22px 14px; border: 2px dashed var(--line); border-radius: var(--radius); cursor: pointer; background: var(--panel2); }
+  .drop:hover, .drop.over { border-color: var(--accent); }
+  .drop.busy { opacity: .5; pointer-events: none; }
+  .drop small { color: var(--muted); }
+  .err { color: var(--bad); }
   .copy input { flex: 1; min-width: 0; }
   @media (max-width: 760px) {
     .app { grid-template-columns: 1fr; grid-template-rows: 60px 1fr 58px; }
@@ -172,9 +177,18 @@
   const VERSIONS = LOADERS.flatMap((l) => l.versions);
   const ZEUS_PLAY = 'https://eaglercraft.com/play?version=';
   const STORE = 'efdash.v1';
-  const VIDEO = 'https://www.youtube.com/watch?v=XJq0q6dEqG4';
-  const INJECTOR = 'https://eaglerforge.github.io/EaglerForgeInjector/';
-  const DOWNLOADS = 'https://eaglercraft.com/downloads';
+  const INJECTOR = 'https://github.com/EaglerForge/EaglerForgeInjector';
+  // Unminifizierte EaglercraftX-Builds aus dem Eaglercraft-Archive. GitHub-Releases schicken keine CORS-Header,
+  // ein fetch() von dieser Seite aus geht also nicht: Der Nutzer holt die Datei per Link, den Injector führt das Dashboard aus.
+  const BUILDS = {
+    '1.8.8': { label: 'EaglercraftX 1.8 u53', file: 'EaglercraftX_1.8_Offline_en_US.html', size: '66 MB', marker: 'nlevit_MainClass',
+      url: 'https://github.com/Eaglercraft-Archive/unminified-eaglercraft-builds/releases/download/u53/EaglercraftX_1.8_Offline_en_US.html',
+      page: 'https://github.com/Eaglercraft-Archive/unminified-eaglercraft-builds/releases/latest' },
+    '1.12.2': { label: 'Eaglercraft 1.12 u2', file: 'Eaglercraft_1.12_Offline_en_US.html', size: '72 MB', marker: 'nleit_MainClass',
+      url: 'https://github.com/Eaglercraft-Archive/unminified-eaglercraft-builds-1.12/releases/download/u2/Eaglercraft_1.12_Offline_en_US.html',
+      page: 'https://github.com/Eaglercraft-Archive/unminified-eaglercraft-builds-1.12/releases/latest' },
+  };
+  const EFI_FLAG = '__eaglerforgeinjector_installation_flag__';
   const CATS = ['Alle', 'Inhalt', 'Werkzeug', 'Befehle', 'Grafik', 'Spaß', 'Bibliothek', 'Ressourcenpaket', 'Trick'];
   const COLORS = ['#e0703a', '#3a8fe0', '#4fb36b', '#b35fd6', '#d6a23a', '#3ab8b0', '#d65f7d', '#7d8bd6'];
 
@@ -222,7 +236,8 @@
       const tx = d.transaction('files', mode);
       const req = fn(tx.objectStore('files'));
       tx.oncomplete = () => res(req && req.result);
-      tx.onerror = () => rej(tx.error);
+      tx.onerror = () => rej(tx.error || new Error('IndexedDB-Fehler'));
+      tx.onabort = () => rej(tx.error || new Error('Speichern abgebrochen'));
     });
   }
   const idbPut = (k, v) => idb('readwrite', (s) => s.put(v, k));
@@ -542,16 +557,16 @@
     const i = cur();
     if (!i) { createInstanceDialog(true); return; }
     if (i.loader === 'zeus') { playZeus(i); return; }
-    const client = state.settings.clientStored ? true : false;
+    const client = !!clientInfo(i.version);
     const url = (state.settings.clientUrl || '').trim();
-    if (!client && !url) { setupGuide(); return; }
+    if (!client && !url) { setupGuide(i.version, true); return; }
     const win = window.open('', '_blank');
     if (!win) { toast('Bitte Pop-ups für diese Seite erlauben', true); return; }
     try { win.document.write('<title>EaglerForge startet …</title><body style="background:#121418;color:#e9edf3;font:16px system-ui;display:grid;place-items:center;height:100vh;margin:0">EaglerForge startet mit ' + i.mods.length + ' Mods …</body>'); } catch (e) { /* ignorieren */ }
     try {
       if (client) {
-        const html = await idbGet('client');
-        if (!html) throw new Error('Client nicht gefunden – bitte in den Einstellungen neu hochladen');
+        const html = await asText(await loadClient(i.version));
+        if (!html) throw new Error('Client nicht gefunden – bitte unter Einstellungen neu einrichten');
         const page = injectMods(html, await modUrls(i, true));
         win.location.href = URL.createObjectURL(new Blob([page], { type: 'text/html' }));
       } else {
@@ -611,18 +626,126 @@
     });
   }
 
-  function setupGuide() {
+  // ------------------------------------------------------------------ EaglerForge-Client selbst bauen
+  // Clients liegen je Version im IndexedDB („client:1.8.8“). Der Einzel-Client der ersten Dashboard-Version zählt als 1.8.8.
+  function clientInfo(v) {
+    const s = state.settings;
+    if (s.clients && s.clients[v]) return s.clients[v];
+    return v === '1.8.8' && s.clientStored ? { name: s.clientName, size: s.clientSize, legacy: true } : null;
+  }
+  async function loadClient(v) {
+    const info = clientInfo(v);
+    if (!info) return null;
+    return (await idbGet('client:' + v)) || (info.legacy ? await idbGet('client') : null);
+  }
+  async function removeClient(v) {
+    await idbDel('client:' + v);
+    if (v === '1.8.8' && state.settings.clientStored) { await idbDel('client'); state.settings.clientStored = false; }
+    if (state.settings.clients) delete state.settings.clients[v];
+    save();
+  }
+  // Der EaglerForge Injector (MIT, vendor/eaglerforge-injector) läuft in einem unsichtbaren Frame
+  let efiFrame = null;
+  function efi() {
+    if (!efiFrame) {
+      efiFrame = new Promise((res, rej) => {
+        const f = document.createElement('iframe');
+        f.hidden = true;
+        f.title = 'EaglerForge-Baukasten';
+        f.onload = () => (f.contentWindow && f.contentWindow.efiReady ? res(f.contentWindow) : rej(new Error('Injector konnte nicht geladen werden')));
+        f.onerror = () => rej(new Error('Injector konnte nicht geladen werden'));
+        f.src = 'dashboard/efi.html';
+        document.body.appendChild(f);
+      }).catch((e) => { efiFrame = null; throw e; });
+    }
+    return efiFrame;
+  }
+  async function importClient(file, v, onStatus) {
+    onStatus('Lese ' + file.name + ' …', 0.04);
+    let html = await file.text();
+    const other = Object.keys(BUILDS).find((k) => k !== v && html.includes(BUILDS[k].marker) && !html.includes(BUILDS[v].marker));
+    if (other) throw new Error('Das ist der Client für ' + other + ', diese Einrichtung ist für ' + v + '.');
+    let efiVer = null;
+    if (html.includes(EFI_FLAG)) {
+      onStatus('EaglerForge ist schon drin – übernehme die Datei …', 0.6);
+    } else if (html.includes('function nmc_Minecraft_startGame(')) {
+      onStatus('Lade den EaglerForge Injector …', 0.08);
+      const w = await efi();
+      let n = 0;
+      onStatus('Baue EaglerForge ein – das dauert etwa eine halbe Minute …', 0.12);
+      html = await w.efiPatch(html, (t) => { n++; onStatus(t, Math.min(0.92, 0.12 + n * 0.03)); });
+      efiVer = w.efiVersion;
+    } else {
+      throw new Error('Das ist kein unminifizierter Eaglercraft-Offline-Download. Nimm die Datei über den Link oben.');
+    }
+    onStatus('Speichere im Browser …', 0.95);
+    try {
+      await idbPut('client:' + v, new Blob([html], { type: 'text/html' }));
+    } catch (e) {
+      throw new Error('Speichern im Browser ging nicht (' + (e && e.name || e) + '). Ist der Speicher voll oder ein privates Fenster offen?');
+    }
+    state.settings.clients = Object.assign({}, state.settings.clients, { [v]: { name: file.name, size: html.length, at: Date.now(), efi: efiVer } });
+    save();
+    onStatus('Fertig', 1);
+  }
+  function setupGuide(v, thenPlay) {
+    v = BUILDS[v] ? v : '1.8.8';
+    const b = BUILDS[v];
+    let busy = false;
     modal({
-      title: 'EaglerForge einrichten',
-      html: `<p>Damit „Spielen“ funktioniert, braucht das Dashboard einmal deinen eigenen EaglerForge-Client. So geht's (wie im Video von radmanplays):</p>
+      title: 'EaglerForge ' + v + ' einrichten',
+      html: `<p>Einmalig: Hol dir den Eaglercraft-${v}-Client, das Dashboard baut EaglerForge dann selbst ein. Danach startet „Spielen“ sofort.</p>
         <ol class="steps">
-          <li>Den <b>EaglercraftX 1.8</b>-Offline-Download holen: <a href="${DOWNLOADS}" target="_blank" rel="noopener">eaglercraft.com/downloads</a></li>
-          <li>Den <a href="${INJECTOR}" target="_blank" rel="noopener">EaglerForge Injector</a> öffnen und die Datei dort hochladen. Heraus kommt eine <code>processed.html</code>.</li>
-          <li>Diese <code>processed.html</code> unter <b>Einstellungen</b> hier hochladen.</li>
+          <li><a class="btn primary" id="efi-dl" href="${b.url}" target="_blank" rel="noopener">⤓ ${esc(b.file)}</a> <small>(${b.size}, ${esc(b.label)})</small></li>
+          <li>Die heruntergeladene Datei hier reinziehen:</li>
         </ol>
-        <p><a href="${VIDEO}" target="_blank" rel="noopener">Video-Anleitung ansehen</a></p>`,
-      actions: [{ label: 'Später', value: false }, { label: 'Zu den Einstellungen', kind: 'primary', value: true }],
-    }).then((go) => { if (go) setTab('settings'); });
+        <label class="drop" id="efi-drop" for="efi-file"><b>Datei hierher ziehen</b><br><small>oder klicken und auswählen · eine fertige processed.html geht auch</small></label>
+        <input type="file" id="efi-file" accept=".html,.htm" hidden>
+        <div id="efi-prog" hidden><div id="efi-text" aria-live="polite">…</div><div class="bar"><div id="efi-fill"></div></div></div>
+        <p><small>Quelle: <a href="${b.page}" target="_blank" rel="noopener">Eaglercraft-Archive</a> · Injector: <a href="${INJECTOR}" target="_blank" rel="noopener">EaglerForge</a> (MIT) · alles bleibt in deinem Browser.</small></p>`,
+      actions: [{ label: 'Später', value: false }],
+      onOpen: (bg) => {
+        const drop = $('#efi-drop', bg), input = $('#efi-file', bg), prog = $('#efi-prog', bg), text = $('#efi-text', bg), fill = $('#efi-fill', bg);
+        const say = (t, p) => { text.textContent = t; text.classList.remove('err'); if (p != null) fill.style.width = Math.round(p * 100) + '%'; };
+        async function handle(file) {
+          if (!file || busy) return;
+          busy = true;
+          drop.classList.add('busy');
+          prog.hidden = false;
+          await new Promise((r) => setTimeout(r, 30));
+          try {
+            await importClient(file, v, say);
+            say('✓ EaglerForge ' + v + ' ist eingerichtet', 1);
+            render();
+            const box = $('.actions', bg);
+            box.innerHTML = '';
+            const close = document.createElement('button');
+            close.className = 'btn';
+            close.textContent = 'Schließen';
+            close.addEventListener('click', () => bg.remove());
+            box.appendChild(close);
+            if (thenPlay) {
+              const go = document.createElement('button');
+              go.className = 'btn primary';
+              go.textContent = '▶ Jetzt spielen';
+              go.addEventListener('click', () => { bg.remove(); play(); });
+              box.appendChild(go);
+              go.focus();
+            }
+            toast('EaglerForge ' + v + ' eingerichtet');
+          } catch (e) {
+            say(e.message || String(e));
+            text.classList.add('err');
+            drop.classList.remove('busy');
+          }
+          busy = false;
+        }
+        input.addEventListener('change', () => handle(input.files[0]));
+        bg.addEventListener('dragover', (e) => { e.preventDefault(); drop.classList.add('over'); });
+        bg.addEventListener('dragleave', (e) => { if (e.target === bg) drop.classList.remove('over'); });
+        bg.addEventListener('drop', (e) => { e.preventDefault(); drop.classList.remove('over'); handle(e.dataTransfer.files[0]); });
+      },
+    });
   }
 
   // ------------------------------------------------------------------ Teilen / Mehrspieler
@@ -737,16 +860,14 @@
           Beim ersten Mal (und wenn sich deine Mods ändern) zeigt das Dashboard, wie du sie im Mods-Menü importierst.</p>
         ${i.loader === 'zeus' && i.importedSig ? '<div class="row"><button class="btn" id="reimport">Import-Hilfe wieder anzeigen</button></div>' : ''}</div>
       <h4 style="margin:18px 0 8px;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">EaglerForge (1.8.8 / 1.12.2)</h4>
-      <div class="note warn">Das Dashboard liefert selbst kein Minecraft aus. Du lädst einmal <b>deinen eigenen</b> EaglerForge-Client hoch; er bleibt nur in deinem Browser.</div>
-      <div class="card"><b>EaglerForge-Client (empfohlen)</b>
-        <p>${s.clientStored ? '✓ Gespeichert: ' + esc(s.clientName || 'processed.html') + ' (' + kb(s.clientSize || 0) + ')' : 'Noch kein Client hochgeladen.'}</p>
-        <ol class="steps"><li><a href="${DOWNLOADS}" target="_blank" rel="noopener">EaglercraftX 1.8 Offline-Download</a> holen</li>
-          <li>Im <a href="${INJECTOR}" target="_blank" rel="noopener">EaglerForge Injector</a> zu <code>processed.html</code> machen (<a href="${VIDEO}" target="_blank" rel="noopener">Video</a>)</li>
-          <li>Hier hochladen:</li></ol>
-        <div class="row"><label class="btn primary" for="client-file">processed.html hochladen</label><input type="file" id="client-file" accept=".html,.htm" hidden>
-          ${s.clientStored ? '<button class="btn danger" id="client-del">Entfernen</button>' : ''}</div></div>
+      <p class="sub" style="margin-bottom:10px">Einmal pro Version: Datei per Link holen und reinziehen, das Dashboard baut EaglerForge selbst ein. Der Client bleibt nur in deinem Browser.</p>
+      <div class="list">${Object.keys(BUILDS).map((v) => {
+        const c = clientInfo(v);
+        return `<div class="li"><div class="grow"><b>Eaglercraft ${v}</b><small>${c ? '✓ Eingerichtet · ' + esc(c.name || 'processed.html') + ' · ' + kb(c.size || 0) + (c.efi ? ' · EaglerForge ' + esc(c.efi) : '') : 'Noch nicht eingerichtet'}</small></div>
+          <button class="btn ${c ? '' : 'primary'}" data-setup="${v}">${c ? 'Neu einrichten' : 'Einrichten'}</button>${c ? `<button class="btn danger" data-unclient="${v}">Entfernen</button>` : ''}</div>`;
+      }).join('')}</div>
       <div class="card" style="margin-top:12px"><b>Oder: Link zu einem gehosteten EaglerForge-Client</b>
-        <p>Die Mods werden als <code>?mod=…</code> an den Link gehängt.</p>
+        <p>Wird genutzt, wenn für die Version kein Client eingerichtet ist. Die Mods werden als <code>?mod=…</code> angehängt.</p>
         <div class="field"><label for="client-url">Adresse</label><input type="url" id="client-url" placeholder="https://…/processed.html" value="${esc(s.clientUrl || '')}"></div></div>
       <div class="card" style="margin-top:12px"><b>Daten</b><p>Instanzen und Mods liegen nur in diesem Browser.</p>
         <div class="row"><button class="btn danger" id="wipe">Alles zurücksetzen</button></div></div>`;
@@ -777,21 +898,10 @@
       const inp = $('#share');
       try { await navigator.clipboard.writeText(inp.value); toast('Link kopiert'); } catch (e) { inp.select(); toast('Link markiert – mit Strg+C kopieren'); }
     });
-    const clf = $('#client-file', main);
-    if (clf) clf.addEventListener('change', async () => {
-      const f = clf.files[0];
-      if (!f) return;
-      const html = await f.text();
-      if (!/eagler/i.test(html)) toast('Hinweis: Die Datei sieht nicht nach Eaglercraft aus', true);
-      if (!/ModAPI|PluginAPI|EaglerForge/i.test(html)) toast('Hinweis: Kein EaglerForge gefunden – erst durch den Injector schicken', true);
-      try {
-        await idbPut('client', html);
-        Object.assign(state.settings, { clientStored: true, clientName: f.name, clientSize: f.size });
-        save(); renderMain(); toast('EaglerForge-Client gespeichert');
-      } catch (e) { toast('Speichern nicht möglich (Browser-Speicher voll oder gesperrt)', true); }
-    });
-    const cd = $('#client-del', main);
-    if (cd) cd.addEventListener('click', async () => { await idbDel('client'); state.settings.clientStored = false; save(); renderMain(); });
+    main.querySelectorAll('[data-setup]').forEach((b) => b.addEventListener('click', () => setupGuide(b.dataset.setup, false)));
+    main.querySelectorAll('[data-unclient]').forEach((b) => b.addEventListener('click', async () => {
+      await removeClient(b.dataset.unclient); renderMain(); toast('Client ' + b.dataset.unclient + ' entfernt');
+    }));
     const cu = $('#client-url', main);
     if (cu) cu.addEventListener('change', () => { state.settings.clientUrl = cu.value.trim(); save(); toast('Adresse gespeichert'); });
     const wipe = $('#wipe', main);
@@ -813,6 +923,7 @@
   document.addEventListener('click', (e) => { if (!$('#inst-pop').hidden && !e.target.closest('#inst-pop')) togglePop(false); });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('#inst-pop').hidden) togglePop(false); });
   $('#play').addEventListener('click', play);
+  ['dragover', 'drop'].forEach((t) => window.addEventListener(t, (e) => { if (e.dataTransfer && [...e.dataTransfer.types].includes('Files')) e.preventDefault(); }));
 
   (async function start() {
     render();

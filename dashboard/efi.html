@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>EaglerForge-Baukasten</title>
+<!-- Unsichtbarer Helfer fürs Mod-Dashboard: führt den EaglerForge Injector (MIT, vendor/eaglerforge-injector) im Browser aus. -->
+</head>
+<body>
+<code id="status"></code>
+<script>
+  // Was der Injector im Browser erwartet: backgroundLog, #status, alert/confirm, Babel (nur fürs Minify, das wir nicht nutzen)
+  var efiLastAlert = null;
+  var efiStatus = function () {};
+  window.backgroundLog = function (text) { efiStatus(String(text)); };
+  window.alert = function (msg) { efiLastAlert = String(msg); };
+  window.confirm = function () { return false; };
+  globalThis.Babel = globalThis.Babel || {};
+  new MutationObserver(function () { efiStatus(document.getElementById('status').textContent); })
+    .observe(document.getElementById('status'), { childList: true, characterData: true, subtree: true });
+</script>
+<script src="../vendor/eaglerforge-injector/patches.js"></script>
+<script src="../vendor/eaglerforge-injector/minify.js"></script>
+<script src="../vendor/eaglerforge-injector/postinit.js"></script>
+<script src="../vendor/eaglerforge-injector/modloader.js"></script>
+<script src="../vendor/eaglerforge-injector/modgui.js"></script>
+<script src="../vendor/eaglerforge-injector/efserver.js"></script>
+<script src="../vendor/eaglerforge-injector/core.js"></script>
+<script>
+  // Schnittstelle fürs Dashboard: efiPatch(text, onStatus) -> fertiges processed.html als Text
+  window.efiPatch = async function (text, onStatus) {
+    efiStatus = onStatus || function () {};
+    efiLastAlert = null;
+    EFIConfig.doEaglerforge = true;
+    EFIConfig.doMinify = false;
+    EFIConfig.doMinifyPlus = false;
+    EFIConfig.doServerExtras = false;
+    const out = await patchClient(text, new DOMParser());
+    if (!out) throw new Error(efiLastAlert || 'Der Injector hat nichts zurückgegeben');
+    return out;
+  };
+  window.efiVersion = EFIConfig.ModAPIVersion;
+  window.efiReady = true;
+</script>
+</body>
+</html>
