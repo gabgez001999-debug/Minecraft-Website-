@@ -176,6 +176,17 @@
   ];
   const VERSIONS = LOADERS.flatMap((l) => l.versions);
   const ZEUS_PLAY = 'https://eaglercraft.com/play?version=';
+  // Offizielle 26.x-Clients von eaglercraft.com. Deren CDN erlaubt fetch() von anderen Seiten (CORS),
+  // das Dashboard lädt sie also selbst wie ein Launcher – in diesem Repo liegt kein Minecraft.
+  // Neue Builds: eaglercraft.com/play listet sie („builds“ mit key und zipEntry).
+  const ZEUS_CDN = 'https://cdn.eaglercraft.net/objects/';
+  const ZEUS_BUILDS = {
+    '26.3': { build: '8c167d43', key: 'dl/26.3/eaglercraft-26.3-8c167d43-bd5aec75.zip', entry: 'eaglercraft-26.3-8c167d43.html', size: 58463507 },
+    '26.2': { build: '8c167d43', key: 'dl/26.2/eaglercraft-26.2-8c167d43-03c9ac60.zip', entry: 'eaglercraft-26.2-8c167d43.html', size: 57550412 },
+  };
+  // Eigene Speicher für den 26.x-Client, damit er sich nicht mit den 1.8/1.12-Clients im selben Browser-Ursprung mischt
+  const ZEUS_OPTS = { worldsDB: 'zeus_worlds', resourcePacksDB: 'zeus_resourcePacks', localStorageNamespace: '_eaglercraft_zeus' };
+  const ZEUS_DONE = 'efdash.zeus.handed';
   const STORE = 'efdash.v1';
   const INJECTOR = 'https://github.com/EaglerForge/EaglerForgeInjector';
   // Unminifizierte EaglercraftX-Builds aus dem Eaglercraft-Archive. GitHub-Releases schicken keine CORS-Header,
@@ -568,7 +579,7 @@
         const html = await asText(await loadClient(i.version));
         if (!html) throw new Error('Client nicht gefunden – bitte unter Einstellungen neu einrichten');
         const page = injectMods(html, await modUrls(i, true));
-        win.location.href = URL.createObjectURL(new Blob([page], { type: 'text/html' }));
+        win.location.href = URL.createObjectURL(new Blob([page], { type: 'text/html;charset=utf-8' }));
       } else {
         const u = new URL(url);
         (await modUrls(i, false)).forEach((m) => u.searchParams.append('mod', m));
@@ -582,9 +593,190 @@
       toast('Start fehlgeschlagen: ' + e.message, true);
     }
   }
-  // Zeus (26.x): Mods lassen sich nicht von außen vorladen, sie kommen über Hauptmenü → Mods → Importieren
+  // ------------------------------------------------------------------ Zeus (26.x) im Dashboard
+  // Der 26.x-Client nimmt Mods über ein Fallenlassen-Ereignis an (window „drop“ mit Dateien). Das Dashboard startet
+  // den offiziellen Client von hier aus und übergibt die Mods genauso, sobald das Mods-Menü offen ist.
+  async function ensureZeusClient(v, say) {
+    const B = ZEUS_BUILDS[v];
+    const info = clientInfo(v);
+    if (info && info.build === B.build) return;
+    const zipBlob = await fetchWithProgress(ZEUS_CDN + B.key, (p) =>
+      say(`Lade Eaglercraft ${v} von eaglercraft.com … ${Math.round(p * B.size / 1048576)} / ${Math.round(B.size / 1048576)} MB`, 0.85 * p));
+    say('Entpacke …', 0.86);
+    const zip = await JSZip.loadAsync(zipBlob);
+    const entry = zip.file(B.entry) || Object.values(zip.files).find((f) => !f.dir && /\.html?$/i.test(f.name) && !/^__MACOSX\//.test(f.name));
+    if (!entry) throw new Error('Im Download von eaglercraft.com fehlt die Spieldatei');
+    const page = await entry.async('blob', (m) => say('Entpacke …', 0.86 + 0.12 * (m.percent / 100)));
+    try {
+      await idbPut('client:' + v, new Blob([page], { type: 'text/html' }));
+    } catch (e) {
+      throw new Error('Speichern im Browser ging nicht (' + (e && e.name || e) + ')');
+    }
+    state.settings.clients = Object.assign({}, state.settings.clients, { [v]: { name: entry.name, size: page.size, build: B.build, at: Date.now(), source: 'eaglercraft.com' } });
+    save();
+  }
+  function bytesB64(u) {
+    let s = '';
+    for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000));
+    return btoa(s);
+  }
+  function fnv(u) { let h = 0x811c9dc5; for (let i = 0; i < u.length; i++) { h ^= u[i]; h = Math.imul(h, 16777619) >>> 0; } return h.toString(36); }
+  async function zeusFiles(i) {
+    const out = [];
+    for (const m of i.mods) {
+      const c = modById(m.id);
+      if (m.custom ? m.loader !== 'zeus' : !fitsInst(c, i)) continue;
+      const blob = await fileOf(i, m.id);
+      if (!blob) continue;
+      const u = new Uint8Array(await blob.arrayBuffer());
+      out.push({ n: m.custom ? customName(m) : c.file, k: !m.custom && c.kind === 'resourcepack' ? 'pack' : 'mod', s: u.length + '-' + fnv(u), d: bytesB64(u) });
+    }
+    return out;
+  }
+  // Läuft im Spiel-Tab vor dem Client: setzt Optionen, hängt sich an screenChanged und zeigt eine kleine Leiste
+  function zeusBoot(FILES, OPTS, KEY, VER) {
+    let done = {};
+    try { done = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { done = {}; }
+    const todo = FILES.filter((f) => done[f.n] !== f.s);
+    let opts;
+    let onScreen = () => {};
+    Object.defineProperty(window, 'eaglercraftXOpts', {
+      configurable: true,
+      get() { return opts; },
+      set(o) {
+        if (o && typeof o === 'object') {
+          Object.assign(o, OPTS);
+          const hooks = o.hooks && typeof o.hooks === 'object' ? o.hooks : (o.hooks = {});
+          const prev = hooks.screenChanged;
+          hooks.screenChanged = function (name) {
+            try { onScreen(String(name || '')); } catch (e) { /* ignorieren */ }
+            if (typeof prev === 'function') return prev.apply(this, arguments);
+          };
+        }
+        opts = o;
+      },
+    });
+    if (!todo.length) return;
+    const toFile = (f) => {
+      const bin = atob(f.d);
+      const u = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+      return new File([u], f.n, { type: /\.zip$/i.test(f.n) ? 'application/zip' : 'text/plain' });
+    };
+    const of = (kind) => todo.filter((f) => f.k === kind);
+    const left = (kind) => of(kind).filter((f) => done[f.n] !== f.s);
+    let ui = null;
+    function hand(kind, force) {
+      const list = force ? of(kind) : left(kind);
+      if (!list.length) return 0;
+      const dt = new DataTransfer();
+      list.forEach((f) => dt.items.add(toFile(f)));
+      window.dispatchEvent(new DragEvent('drop', { dataTransfer: dt, bubbles: true, cancelable: true }));
+      list.forEach((f) => { done[f.n] = f.s; });
+      try { localStorage.setItem(KEY, JSON.stringify(done)); } catch (e) { /* ignorieren */ }
+      console.log('[Mod-Dashboard] übergeben: ' + list.map((f) => f.n).join(', '));
+      if (ui) ui.update();
+      return list.length;
+    }
+    onScreen = (name) => {
+      console.log('[Mod-Dashboard] Bildschirm: ' + name);
+      const kind = /pack/i.test(name) ? 'pack' : /mods/i.test(name) ? 'mod' : null;
+      if (kind && left(kind).length) setTimeout(() => hand(kind), 400);
+    };
+    function mount() {
+      const host = document.createElement('div');
+      host.style.cssText = 'position:fixed;top:8px;right:8px;z-index:2147483647';
+      const root = host.attachShadow({ mode: 'open' });
+      root.innerHTML = '<style>.b{width:290px;background:rgba(18,20,24,.92);color:#e9edf3;font:13px/1.45 system-ui,sans-serif;border:1px solid #3a404c;border-radius:10px;padding:10px 12px;box-shadow:0 8px 24px rgba(0,0,0,.4)}'
+        + '.h{display:flex;justify-content:space-between;align-items:center;font-weight:700;margin-bottom:4px}.r{margin:6px 0}.r.ok{color:#7bd389}'
+        + 'button{font:inherit;color:#1b1007;background:#f0a35c;border:0;border-radius:6px;padding:3px 8px;margin-top:3px;cursor:pointer}button.l{background:#2c323c;color:#e9edf3}.x{background:none;color:#9aa4b2;font-size:16px;padding:0 4px}small{color:#9aa4b2}</style>'
+        + '<div class="b"><div class="h">Mod-Dashboard · Eaglercraft ' + VER + '<button class="x" title="Ausblenden">×</button></div><div id="rows"></div>'
+        + '<small>Klappt es nicht? <button class="l" id="save">Dateien speichern</button> und im Menü „Importieren“ wählen.</small></div>';
+      const rows = root.getElementById('rows');
+      const label = { mod: ['Mods', 'Hauptmenü → <b>Mods</b> öffnen, dann kommen sie automatisch rein.'], pack: ['Ressourcenpaket', 'Optionen → <b>Ressourcenpakete</b> öffnen, dann kommt es automatisch rein.'] };
+      let timer = null;
+      ui = {
+        update() {
+          rows.innerHTML = '';
+          ['mod', 'pack'].forEach((k) => {
+            if (!of(k).length) return;
+            const open = left(k).length;
+            const d = document.createElement('div');
+            d.className = 'r' + (open ? '' : ' ok');
+            d.innerHTML = open ? '<b>' + label[k][0] + ' (' + open + ')</b>: ' + label[k][1] + '<br><button>Jetzt übergeben</button>'
+              : '✓ ' + label[k][0] + ' übergeben. Nicht in der Liste? <button class="l">Nochmal</button>';
+            d.querySelector('button').addEventListener('click', (e) => { e.currentTarget.blur(); hand(k, !open); });
+            rows.appendChild(d);
+          });
+          if (!left('mod').length && !left('pack').length && !timer) timer = setTimeout(() => host.remove(), 20000);
+        },
+      };
+      root.querySelector('.x').addEventListener('click', () => host.remove());
+      root.getElementById('save').addEventListener('click', () => todo.forEach((f, n) => setTimeout(() => {
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(toFile(f));
+        a.download = f.n;
+        a.click();
+      }, n * 300)));
+      ui.update();
+      document.body.appendChild(host);
+    }
+    if (document.body) mount(); else document.addEventListener('DOMContentLoaded', mount);
+  }
+  function injectZeus(html, files, v) {
+    const j = (x) => JSON.stringify(x).replace(/</g, '\\u003c');
+    const js = `<script>(${zeusBoot.toString()})(${j(files)},${j(ZEUS_OPTS)},${j(ZEUS_DONE)},${j(v)});<\/script>`;
+    return /<head[^>]*>/i.test(html) ? html.replace(/<head[^>]*>/i, (m) => m + js) : js + html;
+  }
+  function loadingWin(win, v) {
+    try {
+      win.document.write(`<!doctype html><title>Eaglercraft ${v} startet …</title><body style="margin:0;height:100vh;display:grid;place-items:center;background:#121418;color:#e9edf3;font:16px system-ui,sans-serif"><div style="width:min(420px,90vw)"><b>Eaglercraft ${v}</b><div id="t" style="margin:8px 0;color:#9aa4b2">Startet …</div><div style="height:8px;border-radius:5px;background:#252a33;overflow:hidden"><div id="f" style="height:100%;width:0;background:#f08a3c;transition:width .15s"></div></div></div></body>`);
+      win.document.close();
+    } catch (e) { /* ignorieren */ }
+    return (t, p) => {
+      try {
+        win.document.getElementById('t').textContent = t;
+        if (p != null) win.document.getElementById('f').style.width = Math.round(p * 100) + '%';
+      } catch (e) { /* ignorieren */ }
+    };
+  }
+  async function playZeus(i) {
+    if (state.settings.zeusMode === 'web') { playZeusWeb(i); return; }
+    const v = i.version;
+    const win = window.open('', '_blank');
+    if (!win) { toast('Bitte Pop-ups für diese Seite erlauben', true); return; }
+    const say = loadingWin(win, v);
+    const bar = $('#dlbar'), fill = $('#dl-fill'), text = $('#dl-text');
+    const both = (t, p) => { say(t, p); bar.hidden = false; text.textContent = t; if (p != null) fill.style.width = Math.round(p * 100) + '%'; };
+    try {
+      await ensureZeusClient(v, both);
+      both('Baue das Spiel mit deinen Mods zusammen …', 0.99);
+      let html = await asText(await loadClient(v));
+      if (!html) {
+        delete state.settings.clients[v];
+        await ensureZeusClient(v, both);
+        html = await asText(await loadClient(v));
+      }
+      const files = await zeusFiles(i);
+      win.location.href = URL.createObjectURL(new Blob([injectZeus(html, files, v)], { type: 'text/html;charset=utf-8' }));
+      i.lastPlayed = Date.now(); save();
+      toast('Eaglercraft ' + v + ' gestartet' + (files.length ? ' · ' + files.length + ' Datei(en) für den Import bereit' : ''));
+    } catch (e) {
+      try { win.close(); } catch (x) { /* ignorieren */ }
+      const go = await modal({
+        title: 'Start im Dashboard ging nicht',
+        html: `<p>${esc(e.message || String(e))}</p><p>Du kannst stattdessen auf eaglercraft.com spielen und die Mods dort selbst importieren.</p>`,
+        actions: [{ label: 'Abbrechen', value: false }, { label: 'Auf eaglercraft.com spielen', kind: 'primary', value: true }],
+      });
+      if (go) playZeusWeb(i);
+    } finally {
+      setTimeout(() => { bar.hidden = true; fill.style.width = '0'; }, 600);
+    }
+  }
+
+  // Zeus über eaglercraft.com: Mods lassen sich dort nicht von außen vorladen, sie kommen über Hauptmenü → Mods → Importieren
   // in den Client und bleiben dort gespeichert. Darum: neuer Tab + Import-Hilfe, solange sich die Mods ändern.
-  function playZeus(i) {
+  function playZeusWeb(i) {
     const url = ZEUS_PLAY + encodeURIComponent(i.version);
     const win = window.open(url, '_blank');
     if (win) { try { win.opener = null; } catch (e) { /* ignorieren */ } }
@@ -856,9 +1048,19 @@
     const s = state.settings;
     return `<h1>Einstellungen</h1><p class="sub">Hier verbindest du das Dashboard mit deinen Eaglercraft-Clients.</p>
       <div class="card" style="margin-bottom:12px"><b>Eaglercraft 26.3 / 26.2 (Zeus)</b>
-        <p>Keine Einrichtung nötig: „Spielen“ öffnet <a href="${ZEUS_PLAY}${esc(i.loader === 'zeus' ? i.version : '26.3')}" target="_blank" rel="noopener">eaglercraft.com/play?version=${esc(i.loader === 'zeus' ? i.version : '26.3')}</a> in einem neuen Tab.
-          Beim ersten Mal (und wenn sich deine Mods ändern) zeigt das Dashboard, wie du sie im Mods-Menü importierst.</p>
-        ${i.loader === 'zeus' && i.importedSig ? '<div class="row"><button class="btn" id="reimport">Import-Hilfe wieder anzeigen</button></div>' : ''}</div>
+        <p>Keine Einrichtung nötig. „Spielen“ startet den offiziellen Client hier im Dashboard: Beim ersten Mal lädt das Dashboard ihn direkt von
+          eaglercraft.com (gut 55 MB, bei Updates neu) und übergibt deine Mods automatisch, sobald im Spiel das Mods-Menü offen ist.</p>
+        <div class="list">${Object.keys(ZEUS_BUILDS).map((v) => {
+          const c = clientInfo(v);
+          const fresh = c && c.build === ZEUS_BUILDS[v].build;
+          return `<div class="li"><div class="grow"><b>Eaglercraft ${v}</b><small>${c ? (fresh ? '✓ Geladen' : 'Update verfügbar, kommt beim nächsten Spielen') + ' · Build ' + esc(c.build || '?') + ' · ' + kb(c.size || 0) : 'Wird beim ersten Spielen von eaglercraft.com geladen'}</small></div>
+            ${c ? `<button class="btn danger" data-unclient="${v}">Entfernen</button>` : ''}</div>`;
+        }).join('')}</div>
+        <div class="field" style="margin-top:10px"><label for="zeus-mode">„Spielen“ startet 26.x</label><select id="zeus-mode">
+          <option value="dashboard" ${s.zeusMode !== 'web' ? 'selected' : ''}>hier im Dashboard (Mods kommen automatisch)</option>
+          <option value="web" ${s.zeusMode === 'web' ? 'selected' : ''}>auf eaglercraft.com (Mods selbst importieren)</option></select></div>
+        <div class="row" style="margin-top:10px"><button class="btn" id="rehand">Mods beim nächsten Start nochmal übergeben</button></div>
+        <p><small>Welten im Dashboard-Client sind getrennt von denen auf eaglercraft.com.</small></p></div>
       <h4 style="margin:18px 0 8px;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">EaglerForge (1.8.8 / 1.12.2)</h4>
       <p class="sub" style="margin-bottom:10px">Einmal pro Version: Datei per Link holen und reinziehen, das Dashboard baut EaglerForge selbst ein. Der Client bleibt nur in deinem Browser.</p>
       <div class="list">${Object.keys(BUILDS).map((v) => {
@@ -878,8 +1080,14 @@
     const main = $('#main');
     if (!i) { main.innerHTML = '<div class="empty">Erstelle zuerst eine Instanz.</div>'; return; }
     main.innerHTML = tab === 'mods' ? viewMods(i) : tab === 'discover' ? viewDiscover(i) : tab === 'multi' ? viewMulti(i) : viewSettings(i);
-    const ri = $('#reimport', main);
-    if (ri) ri.addEventListener('click', () => { delete i.importedSig; save(); renderMain(); toast('Beim nächsten „Spielen“ kommt die Import-Hilfe wieder'); });
+    const zm = $('#zeus-mode', main);
+    if (zm) zm.addEventListener('change', () => { state.settings.zeusMode = zm.value; save(); toast(zm.value === 'web' ? '26.x startet auf eaglercraft.com' : '26.x startet im Dashboard'); });
+    const rh = $('#rehand', main);
+    if (rh) rh.addEventListener('click', () => {
+      try { localStorage.removeItem(ZEUS_DONE); } catch (e) { /* ignorieren */ }
+      state.instances.forEach((x) => { delete x.importedSig; });
+      save(); toast('Beim nächsten Start werden alle Mods nochmal übergeben');
+    });
     main.querySelectorAll('[data-go]').forEach((b) => b.addEventListener('click', () => setTab(b.dataset.go)));
     main.querySelectorAll('[data-install]').forEach((b) => b.addEventListener('click', () => install(b.dataset.install)));
     main.querySelectorAll('[data-rm]').forEach((b) => b.addEventListener('click', () => removeMod(b.dataset.rm)));

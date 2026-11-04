@@ -15,7 +15,7 @@ Zwei inoffizielle Mods für die **Eaglercraft-Clients 26.3 und 26.2** mit ihrem 
 
 | Version | Loader | Mods | „Spielen“ |
 |---------|--------|------|-----------|
-| 26.3, 26.2 | **Zeus (Lua)**, eingebaut | Create, Ressourcenpaket, MC-Device aus diesem Repo | öffnet eaglercraft.com in der Version und zeigt, wie die Dateien ins Mods-Menü kommen (der Client kann Mods nicht von außen vorladen) |
+| 26.3, 26.2 | **Zeus (Lua)**, eingebaut | Create, Ressourcenpaket, MC-Device aus diesem Repo | lädt den offiziellen Client von eaglercraft.com (deren CDN erlaubt das per CORS), startet ihn im Dashboard und übergibt die Mods automatisch |
 | 1.8.8, 1.12.2 | **EaglerForge** | 35 offizielle Beispielmods | startet deinen EaglerForge-Client mit den Mods |
 
 Ablauf:
@@ -24,8 +24,12 @@ Ablauf:
   wechselst du Instanz, Loader und Version.
 - **Mods entdecken** zeigt nur Mods für den Loader der Instanz. Braucht eine Mod andere (z. B. Create → Ressourcenpaket,
   WorldEdit → LibCustomItems, Guns → AsyncSink), fragt ein Popup, ob die mit heruntergeladen werden sollen.
-- **Spielen** (unten rechts) bei 26.x: neuer Tab mit eaglercraft.com in der Version, dazu die Import-Hilfe mit allen Dateien.
-  Nach „Erledigt“ startet die Instanz direkt, bis sich Mods oder Version ändern.
+- **Spielen** (unten rechts) bei 26.x: Beim ersten Mal lädt das Dashboard den offiziellen Client direkt von eaglercraft.com
+  (gut 55 MB, bei neuem Build erneut) und speichert ihn im Browser. Der Client nimmt Mods über ein Fallenlassen-Ereignis an;
+  das Dashboard löst es selbst aus, sobald im Spiel das Mods-Menü (bzw. die Ressourcenpakete) offen ist. Eine kleine Leiste im
+  Spiel zeigt den Stand, mit „Jetzt übergeben“ und „Dateien speichern“ als Rückfall. Unter Einstellungen lässt sich auf
+  „auf eaglercraft.com spielen“ (Mods selbst importieren) umstellen. Hinweis: Dieser Teil ist nur gegen einen Nachbau des
+  Clients getestet, nicht im echten Spiel.
 - **Spielen** bei EaglerForge: öffnet EaglerForge mit den Mods der Instanz in einem neuen Tab. Beim ersten Mal pro Version
   fragt das Dashboard nach dem Client: Datei per Link aus dem
   [Eaglercraft-Archive](https://github.com/Eaglercraft-Archive/unminified-eaglercraft-builds/releases/latest) holen und
